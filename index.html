@@ -42,6 +42,7 @@
       --header-height: 120px; 
       --card-radius: 28px;
       --max-app-width: 500px;
+      --anim-smooth: cubic-bezier(.16,1,.3,1);
 
       /* Tipografía - Familia */
       --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
@@ -126,24 +127,36 @@
     }
 
     /* Encabezado */
-    header { 
-      position: absolute; top: 0; left: 0; right: 0; height: var(--header-height); 
-      display: flex; align-items: flex-start; justify-content: center; 
-      z-index: 100; padding: 0 20px; padding-top: max(24px, env(safe-area-inset-top));
-      position: fixed; margin: 0 auto;
-      transition: opacity .25s ease, transform .35s cubic-bezier(.16,1,.3,1), height .35s ease,
-                  background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease;
+    header {
+      --header-progress: 0;
+      --header-height-reduction: 0px;
+      --header-bg-alpha: 0;
+      --header-blur: 0px;
+      --header-shadow-alpha: 0;
+      --header-translate: 0px;
+      position: fixed; top: 0; left: 0; right: 0;
+      height: calc(120px - var(--header-height-reduction));
+      display: flex; align-items: flex-start; justify-content: center;
+      z-index: 100; padding: 0 20px;
+      padding-top: max(24px, env(safe-area-inset-top));
+      margin: 0 auto;
+      background: rgba(255,255,255,var(--header-bg-alpha));
+      backdrop-filter: blur(var(--header-blur));
+      -webkit-backdrop-filter: blur(var(--header-blur));
+      box-shadow: 0 1px 0 rgba(0,0,0,var(--header-shadow-alpha));
+      transform: translate3d(0, var(--header-translate), 0);
+      transition:
+        height .55s cubic-bezier(.16,1,.3,1),
+        padding-top .55s cubic-bezier(.16,1,.3,1),
+        background .45s ease,
+        box-shadow .45s ease,
+        backdrop-filter .45s ease,
+        transform .55s cubic-bezier(.16,1,.3,1);
       transform-origin: top center;
     }
 
     header.header-compact {
-      height: 74px !important;
       align-items: center !important;
-      padding-top: max(8px, env(safe-area-inset-top)) !important;
-      background: rgba(255,255,255,.78);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      box-shadow: 0 1px 0 rgba(0,0,0,.06);
     }
 
     .brand-wordmark { 
@@ -154,13 +167,14 @@
       line-height: 1; 
       margin: 0 auto; 
       color: var(--text-main); 
-      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: transform .55s cubic-bezier(.16,1,.3,1), font-size .55s cubic-bezier(.16,1,.3,1);
       transform-origin: top center;
       pointer-events: auto;
     }
     
     header.header-compact .brand-wordmark {
       font-size: var(--fs-xl);
+      transform: translateY(-1px);
     }
 
     /* Botón de Información sutil y minimalista */
@@ -223,10 +237,10 @@
     .search-wrapper input { 
       width: 100%; border-radius: 99px; padding: 16px 46px 16px 48px; 
       font-size: var(--fs-base); font-weight: var(--fw-medium); font-family: var(--font-main);
-      color: var(--text-main); outline: none; transition: border-color 0.2s, background 0.2s;
+      color: var(--text-main); outline: none; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
     }
     .search-icon { position: absolute; left: 18px; pointer-events: none; }
-    .search-wrapper input:focus { border-color: rgba(0,0,0,0.2); background: #fff; }
+    .search-wrapper input:focus { border-color: rgba(0,0,0,.14); background: #fff; box-shadow: 0 5px 18px rgba(0,0,0,.045); }
     .search-wrapper input::placeholder { color: var(--text-muted); font-weight: var(--fw-medium); }
 
     .search-clear {
@@ -330,8 +344,8 @@
       border: 1px solid var(--surface-border);
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
-    .wallet-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.07); }
-    .wallet-card:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
+    .wallet-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(0,0,0,.075); }
+    .wallet-card:active { transform: translateY(1px) scale(.985); box-shadow: none; }
     
     .card-header { display: flex; flex-direction: column; align-items: flex-start; z-index: 3; width: 100%; }
     .card-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 14px; width: 100%; display: flex; color: var(--text-main);}
@@ -372,10 +386,10 @@
     .stocard-subtitle { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-medium); }
     .stocard-badge { background: rgba(0,0,0,0.05); color: var(--text-main); border-radius: 99px; padding: 6px 14px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);}
     
-    .stocard-stack-container { display: flex; flex-direction: column; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding-top: 16px; position: relative; }
-    .stocard-stack-container.collapsed .card-wrapper { margin-bottom: -115px; transition: margin 0.4s ease, transform 0.4s ease; }
+    .stocard-stack-container { display: flex; flex-direction: column; transition: all .6s cubic-bezier(.16,1,.3,1); padding-top: 16px; position: relative; }
+    .stocard-stack-container.collapsed .card-wrapper { margin-bottom: -115px; transition: margin .55s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1); }
     .stocard-stack-container.collapsed .wallet-card { filter: brightness(0.95); } 
-    .stocard-stack-container.expanded .card-wrapper { margin-bottom: 16px; transition: margin 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .stocard-stack-container.expanded .card-wrapper { margin-bottom: 16px; transition: margin .6s cubic-bezier(.16,1,.3,1); }
     .stocard-stack-container.expanded .wallet-card { filter: none; }
 
     /* Atención (Sugerencias) */
@@ -437,7 +451,7 @@
     .btn-edit-log:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
 
     /* Navegación y FAB */
-    .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 6px; border-radius: 99px; display: flex; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--surface-border); z-index: 100; width: min(360px, calc(100% - 40px)); justify-content: space-between; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; }
+    .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 6px; border-radius: 99px; display: flex; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--surface-border); z-index: 100; width: min(360px, calc(100% - 40px)); justify-content: space-between; transition: transform .5s var(--anim-smooth), opacity .3s ease; }
     .bottom-nav.nav-hidden { transform: translateY(150%); opacity: 0; pointer-events: none; }
     .nav-item { flex: 1; color: var(--text-muted); background: none; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: inherit; transition: all .2s; padding: 14px 0; border-radius: 99px; }
     .nav-item.active { color: var(--text-main); background: #FFFFFF; box-shadow: 0 2px 10px rgba(0,0,0,0.05);} 
@@ -467,7 +481,7 @@
     .input-row > * { flex: 1; }
     label { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-left: 6px; }
     
-    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
     input:focus, select:focus, textarea:focus { border-color: rgba(0,0,0,0.2); background: #FFFFFF; }
     select option { color: var(--text-main); }
     
@@ -546,7 +560,7 @@
     /* Componentes Compartidos Adicionales */
     .app-footer { text-align: center; padding: 20px 0 80px; }
     
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: #fff; padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: #fff; padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform .55s cubic-bezier(.16,1,.3,1), font-size .55s cubic-bezier(.16,1,.3,1); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 600; display: flex; flex-direction: column; overflow: hidden; }
@@ -636,7 +650,7 @@
 
 <div class="app-container" x-cloak>
   
-  <header :class="{ 'header-compact': headerScrolled }" :style="{ opacity: 1, pointerEvents: 'auto' }">
+  <header :class="{ 'header-compact': headerScrolled }" :style="{ '--header-progress': headerScrollProgress, '--header-height-reduction': headerHeightReduction + 'px', '--header-bg-alpha': headerBgAlpha, '--header-blur': headerBlur + 'px', '--header-shadow-alpha': headerShadowAlpha, '--header-translate': headerTranslate + 'px', opacity: 1, pointerEvents: 'auto' }">
     <h1 class="brand-wordmark">souvlaki</h1>
     <button class="btn-about-header" aria-label="Acerca de Souvlaki" @click="modals.about = true" x-show="!isNavHidden">
       <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
@@ -1082,7 +1096,7 @@
           </div>
         </div>
         <h3 class="feature-title">Tus datos son tuyos</h3>
-        <p class="feature-text">Sincronización transparente respaldada en tu propio servidor. Tu información personal está protegida bajo tu control y totalmente fuera del alcance de terceros.</p>
+        <p class="feature-text">Tus datos se guardan localmente en este dispositivo mediante IndexedDB. Souvlaki no los envía a servicios externos.</p>
       </div>
     </div>
   </div>
@@ -1328,16 +1342,12 @@
 <div id="toast" class="toast" :class="{ 'show': toast.show }"><span x-text="toast.msg"></span></div>
 
 <script>
-  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().then(granted => { if(granted) console.log("Persist: OK"); }); }
-
   const db = new Dexie('SouvlakiDB');
-  db.version(5).stores({ contacts: '++id, nombre, apellido, circulo', notes: '++id, contactoId, fecha, tipo, timestamp' });
+  db.version(6).stores({ contacts: '++id, nombre, apellido, circulo', notes: '++id, contactoId, fecha, tipo, timestamp' });
   
-  const API_URL = "https://script.google.com/macros/s/AKfycbzMb8JqFR6SMEpQrA76JyBsNSL_CtrUoGcJjcjxvYEy9QjyLwoQfdBp7SQ-CPQ72irI/exec";
-
   document.addEventListener('alpine:init', () => {
     Alpine.data('appData', () => ({
-      currentView: 'home', isLoading: true, headerOpacity: 1, headerScrolled: false, swipeHintDismissed: localStorage.getItem('souvlaki_swipe_hint') === '1',
+      currentView: 'home', isLoading: true, headerOpacity: 1, headerScrolled: false, headerScrollProgress: 0, headerHeightReduction: 0, headerBgAlpha: 0, headerBlur: 0, headerShadowAlpha: 0, headerTranslate: 0, navScrollHidden: false, lastScrollY: 0, scrollRaf: null, swipeHintDismissed: localStorage.getItem('souvlaki_swipe_hint') === '1',
       modals: { nuevo: false, detalle: false, about: false, confirmDelete: false, sortFilter: false, quickLog: false },
       toast: { show: false, msg: '' }, preventNextClick: false, contactToDelete: null, keyboardOpen: false,
 
@@ -1358,6 +1368,14 @@
       newNote: { tipo: 'conversacion', contactoId: '', fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' },
 
       async initApp() {
+        try {
+          await db.open();
+          if (navigator.storage && navigator.storage.persist) {
+            await navigator.storage.persist();
+          }
+        } catch (e) {
+          console.error('IndexedDB no disponible', e);
+        }
         await this.loadData();
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(el => { el.addEventListener('focus', () => this.keyboardOpen = true); el.addEventListener('blur', () => this.keyboardOpen = false); });
@@ -1377,7 +1395,7 @@
         });
       },
 
-      get isNavHidden() { return this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
+      get isNavHidden() { return this.navScrollHidden || this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
 
       async loadData() {
         this.isLoading = true;
@@ -1486,12 +1504,6 @@
         return orderedGroups;
       },
 
-      backgroundSync(payload) {
-        if(!navigator.onLine) return; 
-        fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
-        .catch(err => console.log('Sync offline fallback.'));
-      },
-
       healthExplanation(contact) {
         if (!contact || !contact._health || contact._health.class === 'hidden') return '';
         if (!contact._lastInteractionTs) return 'Todavía no hay una interacción registrada.';
@@ -1511,9 +1523,28 @@
         localStorage.setItem('souvlaki_swipe_hint', '1');
       },
 
-      handleScroll() { 
-        this.headerScrolled = window.scrollY > 45;
-        this.headerOpacity = 1;
+      handleScroll() {
+        if (this.scrollRaf) return;
+        this.scrollRaf = requestAnimationFrame(() => {
+          const scrollY = Math.max(0, window.scrollY || 0);
+          const delta = scrollY - this.lastScrollY;
+
+          // El encabezado cambia de forma progresiva en vez de saltar entre dos estados.
+          this.headerScrollProgress = Math.min(scrollY / 120, 1);
+          this.headerHeightReduction = 38 * this.headerScrollProgress;
+          this.headerBgAlpha = .78 * this.headerScrollProgress;
+          this.headerBlur = 18 * this.headerScrollProgress;
+          this.headerShadowAlpha = .06 * this.headerScrollProgress;
+          this.headerTranslate = -5 * this.headerScrollProgress;
+          this.headerScrolled = this.headerScrollProgress > .68;
+
+          // La navegación se aparta solo cuando realmente estás bajando; reaparece al subir.
+          if (delta > 10 && scrollY > 180) this.navScrollHidden = true;
+          else if (delta < -8 || scrollY < 40) this.navScrollHidden = false;
+
+          this.lastScrollY = scrollY;
+          this.scrollRaf = null;
+        });
       },
 
       openNewContactModal() {
@@ -1545,12 +1576,10 @@
             cToSave.id = this.editingContactId;
             await db.contacts.put(cToSave);
             this.showToast("CONTACTO ACTUALIZADO");
-            this.backgroundSync({ action: 'editContacto', data: cToSave });
           } else {
             cToSave.id = Date.now();
             await db.contacts.add(cToSave);
             this.showToast("CONTACTO CREADO");
-            this.backgroundSync({ action: 'addContacto', data: cToSave });
           }
 
           this.closeNewContactModal();
@@ -1598,12 +1627,10 @@
             noteToSave.id = this.editingNoteId;
             await db.notes.put(noteToSave);
             this.showToast("REGISTRO ACTUALIZADO");
-            this.backgroundSync({ action: 'editNota', data: noteToSave });
           } else {
             noteToSave.id = Date.now();
             await db.notes.add(noteToSave);
             this.showToast("REGISTRO GUARDADO");
-            this.backgroundSync({ action: 'addNota', data: noteToSave });
           }
 
           this.resetNoteForm();
@@ -1630,7 +1657,6 @@
           
           this.modals.confirmDelete = false; this.showToast("CONTACTO ELIMINADO");
           this.contactToDelete = null; await this.loadData();
-          this.backgroundSync({ action: 'deleteContacto', id: idToDelete });
         } catch(e) {}
       },
 
@@ -1681,7 +1707,6 @@
             this.showToast("INTERACCIÓN REGISTRADA");
             this.closeQuickLogModal();
             await this.loadData();
-            this.backgroundSync({ action: 'addNota', data: noteToSave });
         } catch (e) { 
           console.error(e);
           this.showToast("ERROR AL GUARDAR"); 
