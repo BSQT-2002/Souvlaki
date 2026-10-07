@@ -3,747 +3,1826 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#1b1b1d">
+  <meta name="theme-color" content="#F2F2F7">
+  
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="souvlaki">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <title>souvlaki</title>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Souvlaki">
+  <title>Souvlaki — Agenda Humana</title>
+
+  <!-- Prevenir error 404 del Favicon en consola -->
+  <link rel="icon" href="data:,">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,0,0" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
+
   <style>
+    /* =========================================================
+       SISTEMA DE TIPOGRAFÍA Y VARIABLES GENERALES
+       Estandarización de tamaños, pesos y espaciado
+       ========================================================= */
     :root {
-      --bg-color: #f7f7f5;
-      --surface: #ffffff;
-      --text-main: #171717;
-      --text-muted: #7d7d82;
-      --input-bg: #eeeeec;
-      --nav-bg: #1b1b1d;
-      --c-purple: #d9b8ff;
-      --c-lime: #dfff57;
-      --c-blue: #5367e8;
-      --c-orange: #ff6845;
-      --c-pink: #ffb4eb;
-      --c-cyan: #9ee8df;
-      --c-danger: #ff3b30;
-      --shadow: 0 14px 35px rgba(20,20,20,.08);
-    }
+      /* Colores y Layout */
+      --bg-color: #F2F2F7; 
+      --desktop-bg: #F2F2F7; 
+      --surface-border: rgba(0, 0, 0, 0.08);
+      --text-main: #1C1C1E; 
+      --text-muted: #8E8E93;
+      --input-bg: #FFFFFF; 
+      --nav-bg: rgba(255, 255, 255, 0.9); 
+      --c-danger: #ff3b30; 
+      --header-height: 120px; 
+      --card-radius: 28px;
+      --max-app-width: 500px;
 
+      /* Tipografía - Familia */
+      --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      
+      /* Tipografía - Tamaños (Escala modular) */
+      --fs-micro: 0.75rem;    /* 12px - Etiquetas, pills, metadata */
+      --fs-small: 0.875rem;   /* 14px - Textos secundarios, descripciones */
+      --fs-base: 1rem;        /* 16px - Cuerpo principal, inputs, botones */
+      --fs-lg: 1.125rem;      /* 18px - Subtítulos de tarjetas, headers secundarios */
+      --fs-xl: 1.5rem;        /* 24px - Títulos de sección */
+      --fs-2xl: 2rem;          /* 32px - Nombres de tarjetas, títulos grandes */
+      --fs-display: 2.75rem;  /* 44px - Wordmark, Hero titles */
+
+      /* Tipografía - Pesos */
+      --fw-regular: 400;
+      --fw-medium: 500;
+      --fw-semibold: 600;
+      --fw-bold: 700;
+      --fw-extrabold: 800;    /* Usado en lugar de 900 para mantener elegancia sin perder peso */
+
+      /* Tipografía - Espaciado de letras */
+      --ls-tight: -0.02em;    /* Para títulos grandes */
+      --ls-normal: 0;         /* Para cuerpo de texto */
+      --ls-wide: 0.05em;      /* Para etiquetas en mayúsculas (Micro) */
+    }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-    body { font-family: 'Inter', sans-serif; background: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
-    .app-container { width: 100%; max-width: 520px; position: relative; padding: 22px 18px 116px; }
-
-    /* HEADER */
-    header { display: flex; align-items: center; justify-content: center; margin-bottom: 24px; position: relative; min-height: 52px; }
-    .brand-wordmark { font-size: 2.8rem; font-weight: 800; letter-spacing: -2.7px; text-transform: lowercase; line-height: 1; }
-    .btn-add-top { font-size: 2rem; font-weight: 400; background: none; border: none; color: var(--text-main); cursor: pointer; position: absolute; right: 0; }
-
-    /* BUSCADOR */
-    .search-container { position: relative; margin-bottom: 16px; }
-    .search-container .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.2rem; pointer-events: none; }
-    .search-container input, .search-container select { width: 100%; background: var(--input-bg); border: none; border-radius: 99px; padding: 15px 58px 15px 44px; font-size: .95rem; font-family: inherit; color: var(--text-main); outline: none; }
-    .search-filter-btn { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border: 0; border-radius: 50%; background: transparent; color: var(--text-muted); display: grid; place-items: center; cursor: pointer; transition: background .2s, color .2s, transform .2s; }
-    .search-filter-btn:hover { background: rgba(0,0,0,.06); color: var(--text-main); }
-    .search-filter-btn.active { background: var(--text-main); color: #fff; }
-    .search-filter-btn:active { transform: translateY(-50%) scale(.94); }
-    .filter-panel { display: none; background: var(--input-bg); border-radius: 20px; padding: 10px; margin: -4px 0 14px; box-shadow: 0 8px 22px rgba(0,0,0,.06); animation: filterIn .18s ease; }
-    .filter-panel.open { display: block; }
-    .filter-panel-title { font-size: .68rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; padding: 5px 7px 8px; }
-    .filter-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-    .filter-chip { border: 0; background: #fff; color: #555; border-radius: 13px; padding: 10px 11px; font: 600 .75rem Inter,sans-serif; cursor: pointer; text-align: left; transition: background .2s, color .2s, transform .15s; }
-    .filter-chip.active { background: #171717; color: #fff; }
-    .filter-chip:active { transform: scale(.98); }
-    @keyframes filterIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-
-    .view { display: none; animation: fade 0.3s ease; }
-    .view.active { display: block; }
-    @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-
-    /* ESTRUCTURA APPLE WALLET & SWIPE */
-    .card-list { display: flex; flex-direction: column; gap: 0; padding-top: 8px; perspective: 1200px; }
     
-    .card-wrapper { 
-      position: relative; 
-      margin-bottom: -18px; 
-      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease; 
-      will-change: transform, opacity; 
+    body { 
+      font-family: var(--font-main); 
+      background-color: var(--desktop-bg); 
+      color: var(--text-main); 
+      display: flex; justify-content: center; 
+      min-height: 100vh; overflow-x: hidden; overscroll-behavior-y: none;
+      font-weight: var(--fw-regular);
+      line-height: 1.5;
     }
-    .card-wrapper:last-child { margin-bottom: 0; }
 
+    [x-cloak] { display: none !important; }
+
+    /* Estilo sutil para íconos Lucide */
+    [data-lucide] {
+      stroke-width: 1.75px;
+      vertical-align: middle;
+      color: var(--text-muted);
+      transition: color 0.2s, stroke-width 0.2s;
+    }
+    .nav-item.active [data-lucide],
+    .quick-card-item:hover [data-lucide] {
+      color: var(--text-main);
+      stroke-width: 2.2px;
+    }
+
+    /* Contenedores Principales */
+    .app-container { 
+        width: 100%; 
+        max-width: var(--max-app-width); 
+        position: relative; 
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        box-shadow: none; 
+        overflow-x: hidden; 
+    }
+    
+    @media (min-width: 501px) {
+        .app-container { border-left: none; border-right: none; }
+        header { max-width: var(--max-app-width); }
+        .bottom-nav { width: min(360px, calc(var(--max-app-width) - 40px)) !important; }
+        .bottom-sheet { max-width: var(--max-app-width); margin: 0 auto; border-left: none; border-right: none; }
+        .fs-modal { max-width: var(--max-app-width); left: 50% !important; transform: translateX(-50%); border-left: none; border-right: none; }
+        .fab-add { right: calc(50% - (var(--max-app-width) / 2) + 24px) !important; }
+        .toast { width: 100%; max-width: 400px; }
+    }
+
+    .main-app-content { padding: 180px 16px 140px; width: 100%; }
+
+    .glass-panel {
+      background: #FFFFFF;
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      transform: translate3d(0,0,0);
+    }
+
+    /* Encabezado */
+    header { 
+      position: absolute; top: 0; left: 0; right: 0; height: var(--header-height); 
+      display: flex; align-items: flex-start; justify-content: center; 
+      z-index: 100; padding: 0 20px; padding-top: max(24px, env(safe-area-inset-top));
+      position: fixed; margin: 0 auto;
+      transition: opacity .25s ease, transform .35s cubic-bezier(.16,1,.3,1), height .35s ease,
+                  background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease;
+      transform-origin: top center;
+    }
+
+    header.header-compact {
+      height: 74px !important;
+      align-items: center !important;
+      padding-top: max(8px, env(safe-area-inset-top)) !important;
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 1px 0 rgba(0,0,0,.06);
+    }
+
+    .brand-wordmark { 
+      font-size: var(--fs-display); 
+      font-weight: var(--fw-extrabold); 
+      letter-spacing: var(--ls-tight); 
+      text-transform: lowercase; 
+      line-height: 1; 
+      margin: 0 auto; 
+      color: var(--text-main); 
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: top center;
+      pointer-events: auto;
+    }
+    
+    header.header-compact .brand-wordmark {
+      font-size: var(--fs-xl);
+    }
+
+    /* Botón de Información sutil y minimalista */
+    .btn-about-header {
+      position: absolute; 
+      right: 20px; 
+      top: max(24px, env(safe-area-inset-top));
+      width: 38px; 
+      height: 38px; 
+      border-radius: 50%;
+      background: transparent; 
+      border: none;
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      cursor: pointer; 
+      pointer-events: auto;
+      transition: transform 0.2s, opacity 0.2s;
+      z-index: 101;
+    }
+
+    .btn-about-header:active {
+      transform: scale(0.92);
+      opacity: 0.7;
+    }
+
+    header.header-compact .btn-about-header {
+      top: 50%; 
+      transform: translateY(-50%);
+    }
+
+    header.header-compact .btn-about-header:active {
+      transform: translateY(-50%) scale(0.92);
+    }
+
+    /* Títulos de sección grandes (Log) */
+    .page-title {
+      font-size: var(--fs-display);
+      line-height: 1;
+      letter-spacing: var(--ls-tight);
+      font-weight: var(--fw-extrabold);
+      text-transform: uppercase;
+    }
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: var(--fs-base);
+      margin-top: 12px;
+      font-weight: var(--fw-semibold);
+    }
+    .section-title {
+      font-size: var(--fs-2xl);
+      font-weight: var(--fw-extrabold);
+      letter-spacing: var(--ls-tight);
+      text-transform: uppercase;
+    }
+
+    /* Buscador */
+    .search-container { position: relative; margin-bottom: 24px; display: flex; gap: 8px; z-index: 10; }
+    .search-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
+    .search-wrapper input { 
+      width: 100%; border-radius: 99px; padding: 16px 46px 16px 48px; 
+      font-size: var(--fs-base); font-weight: var(--fw-medium); font-family: var(--font-main);
+      color: var(--text-main); outline: none; transition: border-color 0.2s, background 0.2s;
+    }
+    .search-icon { position: absolute; left: 18px; pointer-events: none; }
+    .search-wrapper input:focus { border-color: rgba(0,0,0,0.2); background: #fff; }
+    .search-wrapper input::placeholder { color: var(--text-muted); font-weight: var(--fw-medium); }
+
+    .search-clear {
+      position: absolute; right: 8px; width: 38px; height: 38px; border: 0; border-radius: 50%;
+      background: #F2F2F7; color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 2; transition: transform 0.2s;
+    }
+    .search-clear:active { transform: scale(.92); }
+
+    /* Focus visible */
+    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid rgba(28,28,30,.18); outline-offset: 3px;
+    }
+
+    .btn-settings {
+      padding: 0 18px; border-radius: 99px; height: 52px;
+      color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-size: var(--fs-small); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
+      cursor: pointer; transition: all .2s; flex-shrink: 0; 
+    }
+    .btn-settings.active { background: var(--text-main); color: #fff; }
+    .btn-settings:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
+
+    .active-filter-row {
+      display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin: -8px 0 18px; padding: 2px 2px 5px;
+    }
+    .active-filter-row::-webkit-scrollbar { display:none; }
+    
+    .active-filter-chip {
+      flex: 0 0 auto; border: 1px solid rgba(0,0,0,.08); background: #fff; color: var(--text-main);
+      border-radius: 999px; padding: 7px 10px 7px 12px;
+      font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-micro);
+      display: inline-flex; align-items: center; gap: 7px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.03);
+    }
+    .active-filter-chip span { color: var(--text-muted); font-size: var(--fs-micro); }
+
+    /* Birthday Radar */
+    .birthday-radar { margin-bottom: 24px; animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; position: relative;}
+    .radar-title { 
+      font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--c-danger); 
+      display: flex; align-items: center; gap: 8px; margin-bottom: 12px; 
+      text-transform: uppercase; letter-spacing: var(--ls-wide); padding-left: 4px; 
+    }
+    .radar-scroll { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; padding-left: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+    .radar-scroll::-webkit-scrollbar { display: none; }
+    
+    .bday-card { 
+      padding: 14px 16px; border-radius: 24px; 
+      display: flex; align-items: center; gap: 16px; 
+      min-width: 260px; flex-shrink: 0; cursor: pointer;
+      background: linear-gradient(135deg, rgba(255, 59, 48, 0.05) 0%, rgba(255, 149, 0, 0.02) 100%);
+      border: 1px solid rgba(255, 59, 48, 0.15); transition: box-shadow 0.2s;
+    }
+    .bday-card:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
+    .bday-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--fs-base); color: #fff; font-weight: var(--fw-extrabold);
+      box-shadow: 0 4px 15px rgba(255, 59, 48, 0.2);
+    }
+    .bday-details { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+    .bday-name { font-weight: var(--fw-bold); font-size: var(--fs-base); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .bday-time { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); }
+    .bday-action {
+      width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
+      background: #fff; border: 1px solid rgba(255,59,48,.16);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Estados Vacíos */
+    .empty-state { 
+      text-align: center; padding: 56px 24px; display: flex; flex-direction: column; 
+      align-items: center; justify-content: center; gap: 12px; 
+      border: 1px dashed rgba(0,0,0,.12); border-radius: 28px; background: rgba(255,255,255,.65); margin-top: 6px;
+    }
+    .empty-state-icon { width: 54px; height: 54px; border-radius: 18px; background: #F2F2F7; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+    .empty-state-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--text-main); }
+    .empty-state-help { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); line-height: 1.5; max-width: 320px; margin: 0 auto;}
+    .empty-state-action { border: 0; background: var(--text-main); color: #fff; border-radius: 999px; padding: 12px 17px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: transform 0.2s;}
+    .empty-state-action:active { transform: scale(0.96); }
+
+    /* Listas y Tarjetas Principales */
+    .primary-list { display: flex; flex-direction: column; gap: 16px; padding-top: 6px; position: relative; z-index: 10; }
+    .card-wrapper { position: relative; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease; will-change: transform, opacity; }
     .card-wrapper.expanded { z-index: 300 !important; }
-    .card-wrapper.expanded .wallet-card { box-shadow: 0 40px 80px rgba(0,0,0,0.3) !important; }
-    .card-wrapper.dimmed { transform: translateY(120vh) !important; opacity: 0; pointer-events: none; }
+    .card-wrapper.dimmed { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
 
-    .swipe-container { width: 100%; will-change: transform; }
+    .swipe-container { width: 100%; touch-action: pan-y; will-change: transform; position: relative;}
+    .swipe-background { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: var(--card-radius); display: flex; align-items: center; color: white; z-index: 0; opacity: 0; transition: opacity 0.2s; font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide);}
+    .swipe-bg-delete { background: rgba(255, 59, 48, 0.9); justify-content: flex-end; padding-right: 28px; }
+    .swipe-bg-log { background: rgba(52, 199, 89, 0.9); justify-content: flex-start; padding-left: 28px; }
 
-    .swipe-background {
-      position: absolute; top: 0; left: 0; right: 0; bottom: 18px;
-      background: var(--c-danger); border-radius: 28px;
-      display: flex; align-items: center; justify-content: flex-end; padding-right: 28px;
-      color: white; z-index: -1;
-      opacity: 0; 
-      transition: opacity 0.2s ease;
-    }
-    
     .wallet-card { 
-      min-height: 148px; border-radius: 28px; padding: 22px 22px 42px; display: flex; flex-direction: column; 
-      position: relative; cursor: pointer; box-shadow: 0 8px 20px rgba(0,0,0,.10); 
-      border: 1px solid rgba(255,255,255,.22); transform-style: preserve-3d; 
+      min-height: 156px; width: 100%; border-radius: var(--card-radius); padding: 26px 24px; 
+      display: flex; flex-direction: column; justify-content: center; position: relative; 
+      cursor: pointer; overflow: hidden; user-select: none; z-index: 2;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s; 
+      border: 1px solid var(--surface-border);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .wallet-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.07); }
+    .wallet-card:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
+    
+    .card-header { display: flex; flex-direction: column; align-items: flex-start; z-index: 3; width: 100%; }
+    .card-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 14px; width: 100%; display: flex; color: var(--text-main);}
+    .truncate-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; flex-shrink: 1; min-width: 0; }
+    
+    .card-pills { display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; }
+    .pill { border: 1px solid rgba(0,0,0,0.1); border-radius: 99px; padding: 6px 12px; font-size: var(--fs-micro); font-weight: var(--fw-semibold); letter-spacing: var(--ls-wide); text-transform: uppercase; background: rgba(255,255,255,0.5); color: var(--text-main); }
+    
+    .pill-health { display: inline-flex; align-items: center; border: none; }
+    .status-good { background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.3); color: #248A3D; }
+    .status-warn { background: rgba(255, 149, 0, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); color: #B26A00; }
+    .status-cold { background: var(--text-main); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+
+    .card-secondary { margin-top: 14px; display: flex; align-items: center; gap: 7px; color: rgba(28,28,30,.62); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+    .card-secondary i { width: 14px; height: 14px; }
+    .card-health-copy { font-size: var(--fs-micro); font-weight: var(--fw-semibold); color: rgba(28,28,30,.58); margin-top: 6px; }
+
+    /* Themes Tarjetas */
+    .theme-titanium { background-color: #FFFFFF; }
+    .theme-aurora { background-color: #FFF0F0; }
+    .theme-obsidian { background-color: #F0F4FF; }
+    .theme-sunrise { background-color: #FFF8EB; }
+    .theme-emerald { background-color: #F0FAF5; }
+    .theme-violet { background-color: #F8F0FF; }
+
+    /* Tarjetero Secundario */
+    .stocard-deck { margin-top: 42px; position: relative; z-index: 5; }
+    .stocard-header { 
+      background: #FFFFFF; color: var(--text-main); border-radius: 24px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; 
+      cursor: pointer; position: relative; z-index: 100; border: 1px solid var(--surface-border);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .stocard-header:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
+    .stocard-header:active { background: #F2F2F7; transform: scale(0.99); }
+    
+    .stocard-header-copy { display: flex; flex-direction: column; gap: 2px; }
+    .stocard-brand { font-size: var(--fs-base); font-weight: var(--fw-bold); }
+    .stocard-subtitle { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-medium); }
+    .stocard-badge { background: rgba(0,0,0,0.05); color: var(--text-main); border-radius: 99px; padding: 6px 14px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);}
+    
+    .stocard-stack-container { display: flex; flex-direction: column; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding-top: 16px; position: relative; }
+    .stocard-stack-container.collapsed .card-wrapper { margin-bottom: -115px; transition: margin 0.4s ease, transform 0.4s ease; }
+    .stocard-stack-container.collapsed .wallet-card { filter: brightness(0.95); } 
+    .stocard-stack-container.expanded .card-wrapper { margin-bottom: 16px; transition: margin 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    .stocard-stack-container.expanded .wallet-card { filter: none; }
+
+    /* Atención (Sugerencias) */
+    .attention-section {
+      margin: 2px 0 28px; padding: 20px; border-radius: 28px;
+      background: linear-gradient(135deg, #fff 0%, #f7f7f9 100%);
+      border: 1px solid var(--surface-border); box-shadow: 0 8px 26px rgba(0,0,0,.045);
+    }
+    .attention-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .attention-kicker { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); letter-spacing: var(--ls-wide); margin-bottom: 4px; text-transform: uppercase; }
+    .attention-title { font-size: var(--fs-xl); line-height: 1.15; letter-spacing: var(--ls-tight); font-weight: var(--fw-bold); }
+    .attention-count {
+      min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px; background: var(--text-main);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold);
+    }
+    .attention-list { display: flex; flex-direction: column; gap: 8px; }
+    .attention-item {
+      width: 100%; border: 1px solid var(--surface-border); background: #fff; border-radius: 18px; padding: 12px;
+      display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; transition: transform .18s ease, background .18s ease; font-family: var(--font-main);
+    }
+    .attention-item:active { transform: scale(.985); background: #f7f7f9; }
+    .attention-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+      font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid rgba(0,0,0,.07);
+    }
+    .attention-info { min-width: 0; flex: 1; }
+    .attention-name { font-size: var(--fs-base); font-weight: var(--fw-bold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .attention-reason { color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); margin-top: 2px; }
+    .attention-action {
+      width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--surface-border);
+      background: #f7f7f9; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
     }
 
-    .wallet-card::after {
-      content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(125deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.05) 40%, rgba(0,0,0,0.1) 100%);
-      border-radius: inherit; pointer-events: none; z-index: 10;
+    /* Registros (Historial) */
+    .note-group { margin-bottom: 32px; }
+    .note-group-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+    .note-group-title::after { content: ''; flex: 1; height: 1px; background: var(--surface-border); }
+    .log-feed { display: flex; flex-direction: column; gap: 16px; }
+    .log-card { padding: 24px; border-radius: 28px; position: relative; padding-left: 20px; border-left: 3px solid rgba(0,0,0,.07); }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .log-user { display: flex; align-items: center; gap: 14px; }
+    .log-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid rgba(0,0,0,0.1);}
+    
+    .log-name-button { border: 0; background: transparent; padding: 0; font-family: inherit; color: inherit; cursor: pointer; text-align: left; }
+    .log-name-button:hover { text-decoration: underline; }
+    .log-name { font-weight: var(--fw-bold); font-size: var(--fs-base); color: var(--text-main); }
+    .log-date { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-semibold); }
+    
+    .log-type { display: inline-flex; font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 12px; }
+    .log-text { font-size: var(--fs-base); line-height: 1.6; color: var(--text-main); font-weight: var(--fw-medium); }
+    .log-meta { background: rgba(0,0,0,0.03); border-radius: 16px; padding: 14px 16px; margin-top: 16px; font-size: var(--fs-small); color: var(--text-main); font-weight: var(--fw-medium); border: 1px solid rgba(0,0,0,0.05); }
+    .log-meta-tag { font-size: var(--fs-micro); text-transform: uppercase; color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 4px; display: block; letter-spacing: var(--ls-wide);}
+    
+    .btn-edit-log {
+      position: absolute; right: 20px; bottom: 20px; background: transparent; border: none;
+      color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      padding: 6px; border-radius: 10px; transition: background 0.2s, color 0.2s;
     }
-    
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-    
-    .card-title { font-size: 1.55rem; font-weight: 700; letter-spacing: -0.8px; line-height: 1.05; transform: translateZ(25px); }
-    .card-pills { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 12px; transform: translateZ(25px); }
-    .pill { border: 1px solid currentColor; border-radius: 99px; padding: 5px 10px; font-size: .68rem; font-weight: 600; opacity: .78; background: rgba(255,255,255,.08); }
-    .card-action-btn { position: absolute; bottom: 18px; right: 18px; width: 34px; height: 34px; border-radius: 50%; background: rgba(0,0,0,.78); color: #fff; display: flex; align-items: center; justify-content: center; transform: translateZ(35px); }
-    
-    .theme-purple { background: var(--c-purple); color: #000; }
-    .theme-lime { background: var(--c-lime); color: #000; }
-    .theme-blue { background: var(--c-blue); color: #FFF; }
-    .theme-orange { background: var(--c-orange); color: #FFF; }
-    .theme-pink { background: var(--c-pink); color: #000; }
-    .theme-cyan { background: var(--c-cyan); color: #000; }
-    .theme-purple .card-action-btn span, .theme-lime .card-action-btn span, .theme-pink .card-action-btn span, .theme-blue .card-action-btn span, .theme-orange .card-action-btn span, .theme-cyan .card-action-btn span { color: #fff; }
+    .btn-edit-log:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
 
-    /* NAVEGACION */
-    .bottom-nav { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: var(--nav-bg); padding: 12px 18px; border-radius: 99px; display: flex; gap: 8px; box-shadow: 0 16px 32px rgba(0,0,0,.25); z-index: 100; width: min(360px, calc(100vw - 28px)); justify-content: space-around; }
-    .nav-item { color: #777; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; font-family: inherit; transition: color .2s, transform .2s; padding: 4px 18px; border-radius: 999px; }
-    .nav-item.active { color: #FFFFFF; background: rgba(255,255,255,.10); } .nav-item:active { transform: scale(.96); }
-    .empty-state { text-align:center; color:var(--text-muted); padding:56px 20px; }
-    .connection-state { font-size:.72rem; color:var(--text-muted); text-align:center; margin:4px 0 8px; min-height:16px; }
+    /* Navegación y FAB */
+    .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 6px; border-radius: 99px; display: flex; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--surface-border); z-index: 100; width: min(360px, calc(100% - 40px)); justify-content: space-between; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; }
+    .bottom-nav.nav-hidden { transform: translateY(150%); opacity: 0; pointer-events: none; }
+    .nav-item { flex: 1; color: var(--text-muted); background: none; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: inherit; transition: all .2s; padding: 14px 0; border-radius: 99px; }
+    .nav-item.active { color: var(--text-main); background: #FFFFFF; box-shadow: 0 2px 10px rgba(0,0,0,0.05);} 
+    .nav-label { font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); }
 
-    /* MODALES */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
-    .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    
-    .bottom-sheet { position: fixed; bottom: -100%; left: 0; right: 0; background: var(--bg-color); border-radius: 32px 32px 0 0; padding: 24px 24px 50px; z-index: 201; transition: bottom 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); max-height: 85vh; overflow-y: auto; max-width: 480px; margin: 0 auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
-    .modal-overlay.active + .bottom-sheet, .bottom-sheet.active { bottom: 0; }
-    #modal-detalle { padding-top: 40px; } 
-    
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-    .sheet-header h2 { font-size: 1.4rem; font-weight: 700; }
-    .close-btn { background: var(--input-bg); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); }
+    .fab-add {
+      position: fixed; 
+      bottom: max(120px, calc(100px + env(safe-area-inset-bottom))); 
+      right: 24px;
+      width: auto; min-width: 60px; padding: 0 19px; height: 60px; border-radius: 999px; gap: 9px;
+      color: var(--text-main); display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 200; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
+      background: #FFFFFF; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid var(--surface-border);
+    }
+    .fab-add:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
+    .fab-add:active { transform: scale(0.92); }
 
-    /* FORMULARIOS Y BOTONES */
-    form { display: flex; flex-direction: column; gap: 16px; }
-    .input-group { display: flex; flex-direction: column; gap: 6px; }
-    .input-row { display: flex; gap: 12px; }
+    /* Modales y Botones */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 400; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-radius: 40px 40px 0 0; border-top: 1px solid var(--surface-border); padding: 12px 24px max(40px, env(safe-area-inset-bottom)); z-index: 401; max-height: 90vh; overflow-y: auto; box-shadow: 0 -10px 50px rgba(0,0,0,0.1); -webkit-overflow-scrolling: touch; }
+    .sheet-handle { width: 48px; height: 6px; background: rgba(0,0,0,0.1); border-radius: 99px; margin: 6px auto 24px; }
+    .close-btn { background: #F2F2F7; border: none; padding: 8px 16px; border-radius: 99px; font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); transition: background 0.2s; position: absolute; top: 20px; right: 24px; z-index: 10;}
+
+    form { display: flex; flex-direction: column; gap: 20px; }
+    .input-group { display: flex; flex-direction: column; gap: 10px; }
+    .input-row { display: flex; gap: 14px; }
     .input-row > * { flex: 1; }
-    label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
-    input, select, textarea { background: var(--input-bg); border: none; border-radius: 16px; padding: 16px; font-size: 0.95rem; font-family: inherit; color: var(--text-main); width: 100%; outline: none; }
+    label { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-left: 6px; }
     
-    .segmented-control { display: flex; background: var(--input-bg); border-radius: 12px; padding: 4px; margin-bottom: 8px; }
-    .segment-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 8px; font-weight: 600; font-size: 0.85rem; color: var(--text-muted); cursor: pointer; }
-    .segment-btn.active { background: #FFFFFF; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    input:focus, select:focus, textarea:focus { border-color: rgba(0,0,0,0.2); background: #FFFFFF; }
+    select option { color: var(--text-main); }
+    
+    .segmented-control { display: flex; background: rgba(0,0,0,0.03); border-radius: 20px; padding: 6px; margin-bottom: 8px; border: 1px solid var(--surface-border); }
+    .segment-btn { flex: 1; padding: 14px; border: none; background: transparent; border-radius: 16px; font-weight: var(--fw-bold); font-family: var(--font-main); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+    .segment-btn.active { background: #FFFFFF; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 
-    .btn-main { background: var(--text-main); color: var(--bg-color); border: none; border-radius: 99px; padding: 18px; font-size: 1.05rem; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
-    .btn-danger { background: transparent; color: var(--c-danger); border: 2px solid var(--c-danger); border-radius: 99px; padding: 16px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .modal-option-btn { text-align: left; padding: 20px 24px; font-size: var(--fs-base); font-family: var(--font-main); color: var(--text-main); font-weight: var(--fw-semibold); display: flex; align-items: center; border-radius: 24px; transition: all 0.2s; border: 1px solid var(--surface-border); background: #F2F2F7; cursor: pointer; }
+    .modal-option-btn.active-opt { background: #FFFFFF; color: var(--text-main); font-weight: var(--fw-bold); box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
+    .modal-option-btn:active { transform: scale(0.97); }
+
+    .btn-main { background: var(--text-main); color: #FFF; border: none; border-radius: 99px; padding: 20px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.15); transition: transform 0.2s;}
+    .btn-main:active { transform: scale(0.96); }
+    .btn-main:disabled { opacity: .6; cursor: not-allowed; transform: none; }
     
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: var(--bg-color); padding: 14px 24px; border-radius: 99px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; z-index: 1000; transition: transform 0.4s; }
+    .btn-secondary { background: #E5E5EA; color: var(--text-main); border: none; border-radius: 99px; padding: 18px; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
+
+    /* Tarjetas de Registro Rápido */
+    .quick-cards-grid { display: flex; flex-direction: column; gap: 12px; }
+    .quick-card-item {
+      background: #FFFFFF; border: 1px solid var(--surface-border); border-radius: 24px; padding: 20px;
+      display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .quick-card-item:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
+    .quick-card-item:active { transform: scale(0.98); background: #F9F9FB; }
+    .quick-card-icon {
+      width: 48px; height: 48px; border-radius: 18px; background: #F2F2F7;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .quick-card-info { flex: 1; }
+    .quick-card-title { font-size: var(--fs-base); font-weight: var(--fw-bold); color: var(--text-main); }
+    .quick-card-sub { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); margin-top: 2px; }
+    
+    /* Detalle de Contacto */
+    .detail-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
+    .btn-detail-action {
+      background: #FFFFFF; border: 1px solid var(--surface-border); border-radius: 20px; padding: 14px 12px;
+      font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
+      color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease;
+    }
+    .btn-detail-action:active { transform: scale(0.97); background: #F2F2F7; }
+    .btn-detail-danger {
+      background: transparent; color: var(--c-danger); border: none; padding: 14px;
+      font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 6px; opacity: 0.85; transition: opacity 0.2s;
+    }
+    .btn-detail-danger:active { opacity: 1; }
+
+    .detail-hero { text-align: center; padding: 10px 0 30px; margin-bottom: 24px; }
+    .detail-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid rgba(0,0,0,0.05); color: var(--text-main); }
+    .detail-name { font-size: var(--fs-display); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 10px; padding: 0 10px; word-break: break-word;}
+    .detail-nickname { font-size: var(--fs-xl); color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 12px; }
+    .detail-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .detail-badge { background: #FFFFFF; border: 1px solid var(--surface-border); padding: 10px 20px; border-radius: 99px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.03);}
+
+    .detail-card-group { background: #F8F8F8; border-radius: 28px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--surface-border); }
+    .detail-group-title { font-size: var(--fs-micro); text-transform: uppercase; color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 16px; letter-spacing: var(--ls-wide); }
+    .detail-row { display: flex; flex-direction: column; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--surface-border); }
+    .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .detail-row:first-of-type { padding-top: 0; }
+    .detail-label { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; gap: 6px; }
+    .detail-val { font-size: var(--fs-base); font-weight: var(--fw-medium); color: var(--text-main); line-height: 1.4; word-break: break-word;}
+
+    .detail-primary-action {
+      width: 100%; border: 0; border-radius: 20px; background: var(--text-main); color: #fff; padding: 17px 18px;
+      display: flex; align-items: center; justify-content: center; gap: 9px;
+      font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small);
+      cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.12); transition: transform .18s ease; margin-top: 2px;
+    }
+    .detail-primary-action:active { transform: scale(.975); }
+    
+    .detail-status-copy { text-align: center; margin-top: 10px; color: var(--text-muted); font-size: var(--fs-micro); font-weight: var(--fw-bold); }
+    .detail-scroll-hint { position: sticky; bottom: 8px; width: max-content; margin: 4px auto 0; padding: 7px 11px; border-radius: 999px; background: rgba(28,28,30,.08); color: var(--text-muted); font-size: var(--fs-micro); font-weight: var(--fw-bold); pointer-events: none; }
+
+    /* Componentes Compartidos Adicionales */
+    .app-footer { text-align: center; padding: 20px 0 80px; }
+    
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: #fff; padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
-    .detail-section { background: var(--input-bg); padding: 16px; border-radius: 16px; margin-bottom: 12px; }
-    .detail-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .detail-item { font-size: 0.95rem; margin-bottom: 8px; display: flex; gap: 8px; align-items: flex-start; }
-    .detail-item:last-child { margin-bottom: 0; }
+    .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 600; display: flex; flex-direction: column; overflow: hidden; }
+    .fs-header { display: flex; justify-content: space-between; align-items: center; padding: max(24px, env(safe-area-inset-top)) 24px 20px; border-bottom: 1px solid var(--surface-border); flex-shrink: 0; background: #FFFFFF; }
+    .fs-header-title { font-size: var(--fs-base); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); }
+    .fs-btn-cancel { background: transparent; border: none; color: var(--text-main); font-size: var(--fs-xl); font-weight: var(--fw-extrabold); cursor: pointer; padding: 4px 8px; line-height: 1;}
+    .fs-body { flex: 1; overflow-y: auto; padding: 30px 24px 140px; -webkit-overflow-scrolling: touch; }
 
-    .section-heading { margin: 4px 0 20px; }
-    .section-heading h2 { font-size:2rem; line-height:1; letter-spacing:-1px; }
-    .section-heading p { color:var(--text-muted); font-size:.82rem; margin-top:7px; }
+    .form-card { border-radius: 28px; padding: 28px 24px; margin-bottom: 28px; }
+    .form-card-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 20px; }
+
+    .avatar-preview-container { display: flex; justify-content: center; margin-bottom: -20px; position: relative; z-index: 10; transform: translateY(-20px); }
+    .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.05); box-shadow: 0 10px 20px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); color: var(--text-main); }
+
+    .btn-disclosure { background: transparent; border: 1px dashed rgba(0,0,0,0.2); color: var(--text-main); padding: 18px; border-radius: 20px; width: 100%; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-bottom: 28px; transition: background 0.2s;}
+    .btn-disclosure:active { background: rgba(0,0,0,0.05); }
+
+    .feature-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; }
+    .feature-card { border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+    .feature-num { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); letter-spacing: var(--ls-wide); }
+    .feature-title { font-size: var(--fs-xl); font-weight: var(--fw-bold); color: var(--text-main); }
+    .feature-text { font-size: var(--fs-base); color: var(--text-muted); line-height: 1.5; font-weight: var(--fw-regular); }
     
-    .birthday-field { position:relative; display:flex; align-items:center; gap:8px; background:var(--input-bg); border-radius:16px; min-height:52px; padding:0 12px 0 14px; }
-    .birthday-field > .material-symbols-rounded { color:var(--text-muted); font-size:1.2rem; }
-    .birthday-field input[type="text"] { background:transparent; padding:14px 4px; flex:1; min-width:0; }
-    .birthday-field input[type="text"]::placeholder { color:#96969b; }
-    .birthday-clear { width:30px; height:30px; border:0; border-radius:50%; background:rgba(0,0,0,.07); color:var(--text-muted); display:grid; place-items:center; cursor:pointer; }
-    .birthday-clear .material-symbols-rounded { font-size:1rem; }
-    .native-date-picker { position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important; pointer-events:none !important; left:14px; top:50%; }
-    .field-hint { color:var(--text-muted); font-size:.68rem; margin-left:4px; }
-    .nav-label { font-size:.65rem; font-weight:700; letter-spacing:.01em; }
-    @media (display-mode: standalone) { .app-container { padding-top: max(22px, env(safe-area-inset-top)); } .bottom-nav { bottom: max(16px, env(safe-area-inset-bottom)); } }
-    @media (max-width: 380px) { .app-container { padding-left:14px; padding-right:14px; } .wallet-card { min-height:138px; padding:20px 18px 40px; } .card-title { font-size:1.4rem; } .nav-item { padding-left:12px; padding-right:12px; } }
+    .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .filter-chip { border: 1px solid var(--surface-border); background: #F2F2F7; color: var(--text-main); border-radius: 99px; padding: 10px 18px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: all .2s; }
+    .filter-chip.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+
+    .sheet-section-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 12px; }
+    .sheet-danger-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); text-transform: uppercase; margin-bottom: 16px; letter-spacing: var(--ls-tight); }
+    .sheet-danger-subtitle { color: var(--text-muted); font-size: var(--fs-base); margin-bottom: 40px; line-height: 1.5; padding: 0 10px; font-weight: var(--fw-semibold); }
+    .quicklog-title { font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: 2px; }
+    .quicklog-subtitle { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+
+    /* Estilos mejorados para el Modal Acerca De */
+    .about-header {
+      text-align: center;
+      padding: 10px 10px 24px;
+    }
+    .about-subtitle {
+      color: var(--text-muted);
+      font-size: var(--fs-small);
+      font-weight: var(--fw-bold);
+      letter-spacing: var(--ls-wide);
+      margin-top: 6px;
+      text-transform: uppercase;
+    }
+
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .feature-icon-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--bg-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--surface-border);
+    }
+    .feature-card-highlight {
+      border: 1px solid rgba(28, 28, 30, 0.2);
+      background: linear-gradient(135deg, #FFFFFF 0%, #F9F9FB 100%);
+    }
+
+    /* Media Queries */
+    @media (max-width:500px) {
+      .main-app-content { padding-left:14px; padding-right:14px; }
+      .card-title { font-size: var(--fs-xl); }
+      .wallet-card { padding: 23px 20px; }
+      .attention-section { padding: 17px; }
+      .detail-name { font-size: var(--fs-2xl); }
+      .bottom-nav { bottom: max(18px, env(safe-area-inset-bottom)); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+    }
+
   </style>
 </head>
-<body>
 
-<div class="app-container">
+<body x-data="appData" @scroll.window="handleScroll" x-init="initApp">
+
+<div class="app-container" x-cloak>
   
-  <header>
+  <header :class="{ 'header-compact': headerScrolled }" :style="{ opacity: 1, pointerEvents: 'auto' }">
     <h1 class="brand-wordmark">souvlaki</h1>
-    <button class="btn-add-top" id="btnGlobalAdd" onclick="abrirModal('modal-nuevo')">+</button>
+    <button class="btn-about-header" aria-label="Acerca de Souvlaki" @click="modals.about = true" x-show="!isNavHidden">
+      <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+    </button>
   </header>
 
-  <!-- HOME -->
-  <main id="view-home" class="view active">
-    <div class="search-container">
-      <span class="material-symbols-rounded search-icon">search</span>
-      <input type="text" id="inputBuscar" placeholder="Buscar contacto..." autocomplete="off" oninput="filtrarContactos()">
-      <button type="button" id="btnFiltro" class="search-filter-btn" aria-label="Filtrar contactos">
-        <span class="material-symbols-rounded">tune</span>
-      </button>
-    </div>
-    <div id="panelFiltros" class="filter-panel">
-      <div class="filter-panel-title">Filtrar por círculo</div>
-      <div id="filtrosCirculo" class="filter-options"></div>
-    </div>
-    <div id="estadoConexion" class="connection-state"></div>
-    <div id="listaContactos" class="card-list">
-      <div style="text-align:center; color: var(--text-muted); padding: 40px 0;">Cargando directorio...</div>
-    </div>
-  </main>
-
-  <!-- LOG Y NOTAS -->
-  <main id="view-log" class="view">
-    <div class="section-heading"><h2>Notas</h2><p>Guardá una charla, plan o momento.</p></div>
-    <form id="formRegistroGlobal">
-      <div class="segmented-control">
-        <button type="button" class="segment-btn active" id="btnConvGlobal" onclick="setTipoRegGlobal('conversacion')">Conversación</button>
-        <button type="button" class="segment-btn" id="btnActGlobal" onclick="setTipoRegGlobal('actividad')">Actividad</button>
-      </div>
+  <div class="main-app-content">
+    
+    <main x-show="currentView === 'home'" x-transition.opacity.duration.300ms>
       
-      <!-- Selector de Contacto con estilo Barra de Búsqueda y botón Nuevo Integrado -->
-      <div class="input-group">
-        <label>Contacto</label>
-        <div class="search-container" style="margin-bottom: 0;">
-          <span class="material-symbols-rounded search-icon">person_search</span>
-          <select id="regContactoGlobal" required style="padding-left: 44px; padding-right: 58px; -webkit-appearance: none; appearance: none; border-radius: 99px;">
-            <option value="">Seleccionar...</option>
-          </select>
-          <button type="button" onclick="abrirModal('modal-nuevo')" class="search-filter-btn active" style="right: 7px;" aria-label="Crear nuevo contacto" title="Nuevo contacto">
-            <span class="material-symbols-rounded">add</span>
+      <!-- BIRTHDAY RADAR WIDGET -->
+      <div class="birthday-radar" x-show="upcomingBirthdays.length > 0">
+        <div class="radar-title">
+          <i data-lucide="cake" style="width: 16px; height: 16px; color: var(--c-danger);"></i>
+          <span>CUMPLEAÑOS CERCANOS</span>
+        </div>
+        <div class="radar-scroll">
+          <template x-for="b in upcomingBirthdays" :key="b.id">
+            <div class="bday-card glass-panel" @click="openDetail(b.id)">
+              <div class="bday-avatar"><span x-text="getInitials(b.nombre, b.apellido)"></span></div>
+              <div class="bday-details">
+                <div class="bday-name" x-text="formatName(b.nombre, b.apellido)"></div>
+                <div class="bday-time" x-text="b.days === 0 ? 'Hoy' : (b.days === 1 ? 'Mañana' : 'En ' + b.days + ' días')"></div>
+              </div>
+              <button class="bday-action" aria-label="Abrir contacto" @click.stop="openDetail(b.id)">
+                <i data-lucide="arrow-up-right" style="width:16px;height:16px;color:var(--c-danger);"></i>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div class="search-container">
+        <div class="search-wrapper">
+          <i data-lucide="search" class="search-icon" style="width:18px;height:18px;"></i>
+          <input type="text" x-model="searchQuery" placeholder="Buscar a alguien…" autocomplete="off" aria-label="Buscar contactos" class="glass-panel">
+          <button x-show="searchQuery" x-cloak type="button" class="search-clear" aria-label="Limpiar búsqueda" @click="searchQuery = ''">
+            <i data-lucide="x" style="width:16px;height:16px;"></i>
           </button>
         </div>
+        <button type="button" class="btn-settings glass-panel" :class="{active: hasActiveFilters}" aria-label="Filtros y orden" @click="modals.sortFilter = true">
+          <i data-lucide="sliders-horizontal" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+
+      <div class="active-filter-row" x-show="hasActiveFilters" x-cloak>
+        <button class="active-filter-chip" x-show="searchQuery" @click="searchQuery = ''">
+          Búsqueda <span>×</span>
+        </button>
+        <button class="active-filter-chip" x-show="filterCircle !== 'Todos'" @click="filterCircle = 'Todos'">
+          <span x-text="filterCircle"></span> ×
+        </button>
+        <button class="active-filter-chip" x-show="sortMode !== 'alfabetico'" @click="sortMode = 'alfabetico'">
+          Orden <span>×</span>
+        </button>
+      </div>
+    
+      <!-- PRIMARY CONTACT CARDS -->
+      <div class="primary-list">
+        
+        <template x-if="!isLoading && primaryContacts.length === 0 && secondaryContacts.length === 0 && searchQuery === ''">
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="users-round" style="width:24px;height:24px;"></i></div>
+            <div class="empty-state-title">Tu agenda empieza acá.</div>
+            <p class="empty-state-help">Agregá a las personas que querés recordar y Souvlaki se encarga de ayudarte a mantener el vínculo presente.</p>
+            <button class="empty-state-action" @click="openNewContactModal()">+ Agregar contacto</button>
+          </div>
+        </template>
+        
+        <template x-if="!isLoading && primaryContacts.length === 0 && secondaryContacts.length === 0 && searchQuery !== ''">
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="search-x" style="width:24px;height:24px;"></i></div>
+            <div class="empty-state-title">No encontramos a nadie.</div>
+            <p class="empty-state-help">Probá con otro nombre, apodo, trabajo o quitá algún filtro.</p>
+            <button class="empty-state-action" @click="searchQuery = ''; filterCircle = 'Todos'; sortMode = 'alfabetico'">Limpiar búsqueda</button>
+          </div>
+        </template>
+
+        <template x-for="(contact, index) in primaryContacts" :key="contact.id">
+          <div class="card-wrapper" 
+               :class="{ 'expanded': activeCard === contact.id, 'dimmed': activeCard && activeCard !== contact.id }"
+               :style="'z-index: ' + (100 - index) + ';'">
+            
+            <div class="swipe-container" :id="'swipe-' + contact.id" x-init="initSwipe($el, contact)">
+              <div class="swipe-background swipe-bg-log" :id="'bg-log-' + contact.id">
+                <span>REGISTRO RÁPIDO</span>
+              </div>
+              <div class="swipe-background swipe-bg-delete" :id="'bg-del-' + contact.id">
+                <span>ELIMINAR</span>
+              </div>
+              <div class="wallet-card" :class="getColorHash(contact.nombre || String(contact.id))">
+                <div class="card-header">
+                  <div class="card-title">
+                    <span class="truncate-name" x-text="formatName(contact.nombre, contact.apellido)"></span>
+                  </div>
+                  <div class="card-pills">
+                    <template x-if="contact._health && contact._health.class !== 'hidden'">
+                      <div class="pill-health pill" :class="contact._health.class">
+                        <span x-text="contact._health.text"></span>
+                      </div>
+                    </template>
+                    <div class="pill" x-text="contact.circulo || 'GENERAL'"></div>
+                    <template x-if="contact.trabajo"><div class="pill" x-text="contact.trabajo"></div></template>
+                  </div>
+                  <div class="card-secondary">
+                    <i data-lucide="clock"></i>
+                    <span x-text="contact._lastInteractionTs ? 'Último contacto: ' + contact._lastInteractionText.toLowerCase() : 'Todavía no hay interacciones'"></span>
+                  </div>
+                  <template x-if="contact._health && contact._health.class !== 'hidden'">
+                    <div class="card-health-copy" x-text="healthExplanation(contact)"></div>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <template x-if="secondaryContacts.length > 0">
+        <div class="stocard-deck">
+          <div class="stocard-header" @click="stocardExpanded = !stocardExpanded">
+            <div class="stocard-header-copy">
+              <div class="stocard-brand"><span>El tarjetero</span></div>
+              <div class="stocard-subtitle">El resto de tu agenda, guardada a mano.</div>
+            </div>
+            <div class="stocard-badge" x-text="secondaryContacts.length + ' contactos'"></div>
+          </div>
+
+          <div class="stocard-stack-container" :class="stocardExpanded ? 'expanded' : 'collapsed'">
+            <template x-for="(contact, index) in secondaryContacts" :key="'stocard-' + contact.id">
+              <div class="card-wrapper" 
+                   :class="{ 'expanded': activeCard === contact.id, 'dimmed': activeCard && activeCard !== contact.id }"
+                   :style="'z-index: ' + (50 - index) + ';'">
+                
+                <div class="swipe-container" :id="'swipe-s-' + contact.id" x-init="initSwipe($el, contact)">
+                  <div class="swipe-background swipe-bg-log" :id="'bg-log-s-' + contact.id">
+                    <span>REGISTRO RÁPIDO</span>
+                  </div>
+                  <div class="swipe-background swipe-bg-delete" :id="'bg-del-s-' + contact.id">
+                    <span>ELIMINAR</span>
+                  </div>
+                  <div class="wallet-card" :class="getColorHash(contact.nombre || String(contact.id))">
+                    <div class="card-header">
+                      <div class="card-title">
+                        <span class="truncate-name" x-text="formatName(contact.nombre, contact.apellido)"></span>
+                      </div>
+                      <div class="card-pills">
+                        <template x-if="contact._health && contact._health.class !== 'hidden'">
+                          <div class="pill-health pill" :class="contact._health.class">
+                            <span x-text="contact._health.text"></span>
+                          </div>
+                        </template>
+                        <div class="pill" x-text="contact.circulo || 'GENERAL'"></div>
+                        <template x-if="contact.trabajo"><div class="pill" x-text="contact.trabajo"></div></template>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <div class="app-footer"></div>
+    </main>
+
+    <main x-show="currentView === 'log'" x-cloak x-transition.opacity.duration.300ms>
+      <div style="margin: 10px 0 30px;">
+        <h2 class="page-title" x-text="editingNoteId ? 'EDITAR NOTA' : 'REGISTRO'"></h2>
+        <p class="page-subtitle" x-text="editingNoteId ? 'ACTUALIZÁ LA INFORMACIÓN DE ESTA ENTRADA.' : 'GUARDÁ UNA CHARLA O PLAN.'"></p>
       </div>
       
-      <div class="input-group"><label>Fecha</label><input type="date" id="regFechaGlobal" required></div>
-      <div class="input-group"><label id="lblDetalleGlobal">¿Qué hablaron?</label><textarea id="regDetalleGlobal" rows="3"></textarea></div>
-      <div class="input-group"><label>Nota / Seguimiento</label><input type="text" id="regNotaGlobal"></div>
-      <button type="submit" class="btn-main" id="btnGuardarRegGlobal">Guardar entrada</button>
-    </form>
-
-    <!-- HISTORIAL DE NOTAS -->
-    <div class="section-heading" style="margin-top: 40px; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 24px;">
-      <h2>Historial</h2>
-      <p>Tus últimos registros guardados.</p>
-    </div>
-    <div id="listaNotas" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-      <!-- Las notas se inyectan aquí -->
-    </div>
-  </main>
-
-  <nav class="bottom-nav">
-    <button class="nav-item active" id="nav-home-btn" aria-label="Tarjetas" onclick="switchView('view-home', this)"><span class="material-symbols-rounded">view_agenda</span><span class="nav-label">Tarjetas</span></button>
-    <button class="nav-item" id="nav-log-btn" aria-label="Notas" onclick="switchView('view-log', this)"><span class="material-symbols-rounded">edit_note</span><span class="nav-label">Notas</span></button>
-  </nav>
-
-  <!-- MODAL NUEVO -->
-  <div class="modal-overlay" id="overlay-nuevo" onclick="cerrarModal('modal-nuevo')"></div>
-  <div class="bottom-sheet" id="modal-nuevo">
-    <div class="sheet-header">
-      <h2>Nuevo Contacto</h2>
-      <button class="close-btn" onclick="cerrarModal('modal-nuevo')"><span class="material-symbols-rounded">close</span></button>
-    </div>
-    <form id="formNuevoContacto">
-      <div class="input-row">
-        <div class="input-group"><label>Nombre *</label><input type="text" id="cNombre" required></div>
-        <div class="input-group"><label>Apellido</label><input type="text" id="cApellido"></div>
-      </div>
-      <div class="input-row">
-        <div class="input-group"><label>Apodo</label><input type="text" id="cApodo"></div>
+      <form @submit.prevent="saveNote">
+        <div class="segmented-control glass-panel">
+          <button type="button" class="segment-btn" :class="{'active': newNote.tipo === 'conversacion'}" @click="newNote.tipo = 'conversacion'">CONVERSACIÓN</button>
+          <button type="button" class="segment-btn" :class="{'active': newNote.tipo === 'actividad'}" @click="newNote.tipo = 'actividad'">ACTIVIDAD</button>
+        </div>
+        
         <div class="input-group">
-          <label>Círculo</label>
-          <select id="cCirculo"><option value="Amigos">Amigos</option><option value="Familia">Familia</option><option value="Trabajo">Trabajo</option><option value="Conocidos">Conocidos</option></select>
-        </div>
-      </div>
-      <div class="input-row">
-        <div class="input-group"><label for="cGenero">Género</label><select id="cGenero"><option value="">Seleccionar...</option><option value="Hombre">Hombre</option><option value="Mujer">Mujer</option></select></div>
-        <div class="input-group birthday-group">
-          <label for="cCumpleanos">Cumpleaños</label>
-          <div class="birthday-field" id="birthdayField">
-            <span class="material-symbols-rounded">calendar_month</span>
-            <input type="text" id="cCumpleanos" placeholder="Elegir fecha" readonly autocomplete="off">
-            <button type="button" class="birthday-clear" id="birthdayClear"><span class="material-symbols-rounded">close</span></button>
-            <input type="date" id="cCumpleanosPicker" class="native-date-picker" tabindex="-1" aria-hidden="true">
+          <label>CONTACTO</label>
+          <div class="search-wrapper">
+            <select x-model="newNote.contactoId" required class="glass-panel" style="padding-left: 18px;">
+              <option value="">SELECCIONAR...</option>
+              <template x-for="c in contactsListAlphabetic" :key="c.id">
+                <option :value="c.id" x-text="formatName(c.nombre, c.apellido)"></option>
+              </template>
+            </select>
           </div>
-          <small class="field-hint">Se guarda solo el día y el mes.</small>
+        </div>
+        
+        <div class="input-group">
+          <label>FECHA</label>
+          <input type="date" x-model="newNote.fecha" required class="glass-panel" style="padding-left: 18px;">
+        </div>
+        <div class="input-group">
+          <label x-text="newNote.tipo === 'conversacion' ? '¿QUÉ HABLARON?' : '¿QUÉ HICIERON?'"></label>
+          <textarea x-model="newNote.detalle" rows="4" required class="glass-panel" autocapitalize="sentences"></textarea>
+        </div>
+        <div class="input-group">
+          <label>SEGUIMIENTO / CONTEXTO (OPCIONAL)</label>
+          <input type="text" x-model="newNote.nota" placeholder="EJ: ACORDAMOS VERNOS EL VIERNES..." class="glass-panel" autocapitalize="sentences" style="padding-left: 18px;">
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+          <template x-if="editingNoteId">
+            <button type="button" class="btn-secondary" @click="resetNoteForm()" style="flex: 1;">CANCELAR</button>
+          </template>
+          <button type="submit" class="btn-main" :disabled="isSavingNote" style="flex: 2;">
+            <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
+            <span x-text="isSavingNote ? 'GUARDANDO...' : (editingNoteId ? 'ACTUALIZAR ENTRADA' : 'GUARDAR ENTRADA')"></span>
+          </button>
+        </div>
+      </form>
+
+      <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--surface-border);">
+        <h2 class="section-title">HISTORIAL</h2>
+        <div class="filter-options" style="margin: 20px 0;">
+          <button class="filter-chip" :class="{ 'active': noteFilter === 'Todos' }" @click="noteFilter = 'Todos'">TODOS</button>
+          <template x-for="circulo in uniqueCircles" :key="circulo">
+            <button class="filter-chip" :class="{ 'active': noteFilter === circulo }" @click="noteFilter = circulo" x-text="circulo"></button>
+          </template>
         </div>
       </div>
-      <div class="input-group"><label>¿Cómo nos conocimos?</label><input type="text" id="cConocimos"></div>
-      <div class="input-group"><label>Trabajo / Profesión</label><input type="text" id="cTrabajo"></div>
-      <div class="input-group"><label>Preferencias de comida</label><input type="text" id="cComida"></div>
-      <div class="input-row">
-        <div class="input-group"><label>Relación Amorosa</label><input type="text" id="cPareja" placeholder="Nombre pareja"></div>
-        <div class="input-group"><label>Mascotas</label><input type="text" id="cMascotas"></div>
+      
+      <div class="log-feed">
+        <template x-if="Object.keys(groupedNotes).length === 0">
+          <div class="empty-state">
+            <div class="empty-state-icon"><i data-lucide="notebook-pen" style="width:24px;height:24px;"></i></div>
+            <div class="empty-state-title">Todavía no hay recuerdos.</div>
+            <p class="empty-state-help">Cuando hables, salgas o llames a alguien, registralo acá para que la historia de ese vínculo quede guardada.</p>
+            <button class="empty-state-action" @click="currentView = 'home'; window.scrollTo(0,0)">Ver agenda</button>
+          </div>
+        </template>
+        
+        <template x-for="(notesArray, groupName) in groupedNotes" :key="groupName">
+          <div class="note-group">
+            <div class="note-group-title" x-text="groupName"></div>
+            <div style="display:flex; flex-direction:column; gap:20px;">
+              <template x-for="n in notesArray" :key="n.id">
+                <div class="log-card glass-panel">
+                  <button class="btn-edit-log" aria-label="Editar registro" title="Editar registro" @click="editNote(n)">
+                    <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
+                  </button>
+                  <div class="log-header">
+                    <div class="log-user">
+                      <div class="log-avatar" :class="getColorHash(getContactRawName(n.contactoId))"><span x-text="getInitialsFromId(n.contactoId)"></span></div>
+                      <button class="log-name-button log-name" @click="openDetail(parseInt(n.contactoId))" x-text="getContactName(n.contactoId)" aria-label="Abrir contacto"></button>
+                    </div>
+                    <span class="log-date" x-text="formatDateFriendly(n.fecha)"></span>
+                  </div>
+                  <div class="log-type">
+                    <span x-text="n.tipo === 'conversacion' ? 'CONVERSACIÓN' : 'ACTIVIDAD'"></span>
+                  </div>
+                  <div class="log-text" x-text="n.detalle"></div>
+                  <template x-if="n.nota">
+                    <div class="log-meta">
+                      <span class="log-meta-tag">NOTA DE SEGUIMIENTO</span>
+                      <div x-text="n.nota"></div>
+                    </div>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
       </div>
-      <div class="input-group"><label>Relaciones Familiares</label><input type="text" id="cFamilia" placeholder="Hijos..."></div>
-      <div class="input-group"><label>Notas / Contexto general</label><textarea id="cNotas" rows="2"></textarea></div>
-      <button type="submit" class="btn-main" id="btnGuardarContacto">Crear Ficha</button>
-    </form>
+    </main>
   </div>
 
-  <!-- MODAL DETALLE -->
-  <div class="modal-overlay" id="overlay-detalle" onclick="cerrarModal('modal-detalle')"></div>
-  <div class="bottom-sheet" id="modal-detalle">
-    <div class="sheet-header">
-      <h2 id="detNombre" style="opacity: 0;">Oculto para dar espacio a la tarjeta</h2>
-      <button class="close-btn" onclick="cerrarModal('modal-detalle')"><span class="material-symbols-rounded">close</span></button>
+  <nav class="bottom-nav" :class="{ 'nav-hidden': isNavHidden }">
+    <button class="nav-item" :class="{ 'active': currentView === 'home' }" @click="currentView = 'home'; window.scrollTo(0,0);">
+      <i data-lucide="users" style="width: 18px; height: 18px;"></i>
+      <span class="nav-label">AGENDA</span>
+    </button>
+    <button class="nav-item" :class="{ 'active': currentView === 'log' }" @click="currentView = 'log'; window.scrollTo(0,0);">
+      <i data-lucide="notebook-pen" style="width: 18px; height: 18px;"></i>
+      <span class="nav-label">REGISTRO</span>
+    </button>
+  </nav>
+
+  <button class="fab-add" x-show="currentView === 'home' && !isNavHidden" x-transition.scale.origin.bottom aria-label="Agregar contacto" @click="openNewContactModal()">
+    <i data-lucide="plus" style="width:21px;height:21px;color:var(--text-main);"></i>
+  </button>
+
+  <div class="modal-overlay" x-show="modals.sortFilter" x-cloak x-transition.opacity @click="modals.sortFilter = false"></div>
+  <div class="bottom-sheet" x-show="modals.sortFilter" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500;">
+    <div class="sheet-handle"></div>
+    
+    <div style="margin-bottom: 24px;">
+      <h2 class="sheet-section-title">FILTRAR POR CÍRCULO</h2>
+      <div class="filter-options">
+        <button class="filter-chip" :class="{ 'active': filterCircle === 'Todos' }" @click="filterCircle = 'Todos'; modals.sortFilter = false;">TODOS</button>
+        <template x-for="circulo in uniqueCircles" :key="circulo">
+          <button class="filter-chip" :class="{ 'active': filterCircle === circulo }" @click="filterCircle = circulo; modals.sortFilter = false;" x-text="circulo"></button>
+        </template>
+      </div>
     </div>
-    <div id="detContenido"></div>
+
+    <div>
+      <h2 class="sheet-section-title">ORDENAR AGENDA</h2>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'alfabetico'}" @click="sortMode = 'alfabetico'; modals.sortFilter = false;">
+          ALFABÉTICO
+        </button>
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'reciente'}" @click="sortMode = 'reciente'; modals.sortFilter = false;">
+          INTERACCIÓN RECIENTE
+        </button>
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'atencion'}" @click="sortMode = 'atencion'; modals.sortFilter = false;">
+          NECESITAN ATENCIÓN
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGISTRO RÁPIDO CON TARJETAS Y SEGUIMIENTO -->
+  <div class="modal-overlay" x-show="modals.quickLog" x-cloak x-transition.opacity @click="closeQuickLogModal"></div>
+  <div class="bottom-sheet" x-show="modals.quickLog" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500;">
+    <div class="sheet-handle"></div>
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+      <div class="log-avatar" :class="getColorHash(activeQuickLogContact?.nombre || 'X')" style="width: 48px; height: 48px; font-size: var(--fs-base);">
+        <span x-text="getInitials(activeQuickLogContact?.nombre, activeQuickLogContact?.apellido)"></span>
+      </div>
+      <div>
+        <h2 class="quicklog-title" x-text="formatName(activeQuickLogContact?.nombre, activeQuickLogContact?.apellido)"></h2>
+        <div class="quicklog-subtitle">REGISTRO RÁPIDO</div>
+      </div>
+    </div>
+    
+    <!-- PASO 1: SELECCIÓN DE TARJETA -->
+    <template x-if="quickLogStep === 1">
+      <div class="quick-cards-grid">
+        <div class="quick-card-item" @click="selectQuickOption('Conversación por mensajes', 'conversacion')">
+          <div class="quick-card-icon">
+            <i data-lucide="message-square-more" style="width: 22px; height: 22px; color: var(--text-main);"></i>
+          </div>
+          <div class="quick-card-info">
+            <div class="quick-card-title">Conversación por mensajes</div>
+            <div class="quick-card-sub">Chats, WhatsApp o SMS</div>
+          </div>
+        </div>
+
+        <div class="quick-card-item" @click="selectQuickOption('Llamada telefónica', 'conversacion')">
+          <div class="quick-card-icon">
+            <i data-lucide="phone-call" style="width: 22px; height: 22px; color: var(--text-main);"></i>
+          </div>
+          <div class="quick-card-info">
+            <div class="quick-card-title">Llamada telefónica</div>
+            <div class="quick-card-sub">Llamada de voz o videollamada</div>
+          </div>
+        </div>
+
+        <div class="quick-card-item" @click="selectQuickOption('Encuentro en persona', 'actividad')">
+          <div class="quick-card-icon">
+            <i data-lucide="user-check" style="width: 22px; height: 22px; color: var(--text-main);"></i>
+          </div>
+          <div class="quick-card-info">
+            <div class="quick-card-title">Encuentro en persona</div>
+            <div class="quick-card-sub">Salida, café o reunión presencial</div>
+          </div>
+        </div>
+
+        <button class="modal-option-btn" style="justify-content: center; background: transparent; border: none; margin-top: 6px; color: var(--text-muted); box-shadow: none; gap: 8px;" @click="quickLogFullEditor(activeQuickLogContact?.id)">
+          <i data-lucide="square-pen" style="width: 16px; height: 16px;"></i>
+          <span>Escribir detalladamente</span>
+        </button>
+      </div>
+    </template>
+
+    <!-- PASO 2: SEGUIMIENTO/CONTEXTO OPCIONAL -->
+    <template x-if="quickLogStep === 2">
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="input-group">
+          <label>SEGUIMIENTO / CONTEXTO (OPCIONAL)</label>
+          <input type="text" x-model="quickLogNote" placeholder="EJ: Quedamos en hablar la semana que viene..." class="glass-panel" autocapitalize="sentences" autofocus @keyup.enter="confirmQuickLog()" style="padding-left: 18px;">
+        </div>
+        
+        <button class="btn-main" @click="confirmQuickLog()">
+          <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
+          <span>GUARDAR REGISTRO</span>
+        </button>
+        <button class="btn-secondary" @click="quickLogStep = 1">
+          VOLVER
+        </button>
+      </div>
+    </template>
+  </div>
+
+  <!-- MODAL ACERCA DE SOUVLAKI -->
+  <div class="modal-overlay" x-show="modals.about" x-cloak x-transition.opacity @click="modals.about = false"></div>
+  <div class="bottom-sheet" x-show="modals.about" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 600;">
+    <div class="sheet-handle"></div>
+    <button type="button" class="close-btn" @click="modals.about = false">CERRAR</button>
+    
+    <div class="about-header">
+      <h2 class="brand-wordmark" style="margin-bottom: 4px; transform: none; pointer-events: none;">souvlaki</h2>
+      <p class="about-subtitle">LA AGENDA HUMANA PARA CUIDAR A QUIENES IMPORTAN</p>
+    </div>
+
+    <div class="feature-grid">
+      <!-- 01 · Ritmo y Frecuencia -->
+      <div class="feature-card glass-panel feature-card-highlight">
+        <div class="feature-card-header">
+          <span class="feature-num">01</span>
+          <div class="feature-icon-badge">
+            <i data-lucide="clock" style="width: 18px; height: 18px; color: var(--text-main);"></i>
+          </div>
+        </div>
+        <h3 class="feature-title">Tu ritmo de conexión</h3>
+        <p class="feature-text">Define qué tan seguido quieres saber de cada persona. Souvlaki compara el tiempo desde tu última charla y te avisa cuando es momento de volver a hablar.</p>
+      </div>
+
+      <!-- 02 · Memoria Detallada -->
+      <div class="feature-card glass-panel">
+        <div class="feature-card-header">
+          <span class="feature-num">02</span>
+          <div class="feature-icon-badge">
+            <i data-lucide="heart-handshake" style="width: 18px; height: 18px; color: var(--text-main);"></i>
+          </div>
+        </div>
+        <h3 class="feature-title">Más allá de los nombres</h3>
+        <p class="feature-text">Registra conversaciones, actividades compartidas y detalles importantes. No dejes que la memoria te falle en lo que de verdad le importa a tus seres queridos.</p>
+      </div>
+
+      <!-- 03 · Filosofía Ética (Sin nombrar MonicaHQ) -->
+      <div class="feature-card glass-panel">
+        <div class="feature-card-header">
+          <span class="feature-num">03</span>
+          <div class="feature-icon-badge">
+            <i data-lucide="sparkles" style="width: 18px; height: 18px; color: var(--text-main);"></i>
+          </div>
+        </div>
+        <h3 class="feature-title">Un espacio íntimo, no comercial</h3>
+        <p class="feature-text">Diseñado para ser una libreta personal y libre de distracciones. Sin métricas corporativas, embudos de venta ni tratar a tus relaciones como si fueran clientes.</p>
+      </div>
+
+      <!-- 04 · Privacidad -->
+      <div class="feature-card glass-panel">
+        <div class="feature-card-header">
+          <span class="feature-num">04</span>
+          <div class="feature-icon-badge">
+            <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--text-main);"></i>
+          </div>
+        </div>
+        <h3 class="feature-title">Tus datos son tuyos</h3>
+        <p class="feature-text">Sincronización transparente respaldada en tu propio Google Sheets. Tu información personal está protegida bajo tu control y totalmente fuera del alcance de terceros.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREAR O EDITAR CONTACTO -->
+  <div class="fs-modal" x-show="modals.nuevo" x-cloak x-transition:enter="transition ease-out duration-400" x-transition:enter-start="transform translate-y-full opacity-0" x-transition:enter-end="transform translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="transform translate-y-0 opacity-100" x-transition:leave-end="transform translate-y-full opacity-0">
+    
+    <div class="fs-header">
+      <div class="fs-header-title" x-text="editingContactId ? 'EDITAR CONTACTO' : 'NUEVO CONTACTO'"></div>
+      <button class="fs-btn-cancel" @click="closeNewContactModal">×</button>
+    </div>
+
+    <div class="fs-body">
+      <form id="form-nuevo-contacto" @submit.prevent="saveContact">
+        
+        <div class="avatar-preview-container">
+          <div class="avatar-preview glass-panel" :class="getColorHash(newContact.nombre || 'Nuevo')">
+            <span x-text="getInitials(newContact.nombre || 'N', newContact.apellido)"></span>
+          </div>
+        </div>
+
+        <div class="form-card glass-panel">
+          <div class="form-card-title">IDENTIDAD</div>
+          <div class="input-group">
+            <label>NOMBRE *</label>
+            <input type="text" x-model="newContact.nombre" autocapitalize="words" required placeholder="EJ: MARTÍN" style="padding-left: 18px;">
+          </div>
+          <div class="input-row" style="margin-top: 16px;">
+            <div class="input-group"><label>APELLIDO</label><input type="text" x-model="newContact.apellido" autocapitalize="words" placeholder="OPCIONAL" style="padding-left: 18px;"></div>
+            <div class="input-group"><label>APODO</label><input type="text" x-model="newContact.apodo" autocapitalize="words" placeholder="EJ: TINCHO" style="padding-left: 18px;"></div>
+          </div>
+        </div>
+
+        <button type="button" class="btn-disclosure" x-show="!showAdvancedContactFields" @click="showAdvancedContactFields = true">
+          <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
+          <span>AÑADIR MÁS DETALLES</span>
+        </button>
+
+        <div x-show="showAdvancedContactFields" x-transition.opacity>
+          <div class="form-card glass-panel">
+            <div class="form-card-title">EL VÍNCULO</div>
+            <div class="input-group">
+              <label>CÍRCULO SOCIAL</label>
+              <select x-model="newContact.circulo" style="padding-left: 18px;">
+                <option>AMIGOS</option><option>FAMILIA</option><option>TRABAJO</option><option>CONOCIDOS</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-top: 16px;">
+              <label>ATENCIÓN (RECORDATORIOS)</label>
+              <select x-model="newContact.frecuencia_deseada" style="padding-left: 18px;">
+                <option value="7">SEMANAL (7 DÍAS)</option>
+                <option value="15">QUINCENAL (15 DÍAS)</option>
+                <option value="30">MENSUAL (30 DÍAS)</option>
+                <option value="90">TRIMESTRAL (3 MESES)</option>
+                <option value="180">SEMESTRAL (6 MESES)</option>
+                <option value="365">ANUAL (1 AÑO)</option>
+                <option value="0">SIN RECORDATORIOS</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-top: 16px;"><label>¿CÓMO NOS CONOCIMOS?</label><input type="text" x-model="newContact.como_nos_conocimos" autocapitalize="sentences" placeholder="EJ: EN LA UNIVERSIDAD..." style="padding-left: 18px;"></div>
+          </div>
+
+          <div class="form-card glass-panel">
+            <div class="form-card-title">CONTEXTO & DETALLES</div>
+            <div class="input-row">
+              <div class="input-group"><label>CUMPLEAÑOS</label><input type="date" x-model="newContact.cumpleanos" style="padding-left: 18px;"></div>
+              <div class="input-group"><label>GÉNERO</label><select x-model="newContact.genero" style="padding-left: 18px;"><option value="">-</option><option value="Hombre">HOMBRE</option><option value="Mujer">MUJER</option></select></div>
+            </div>
+            <div class="input-group" style="margin-top: 16px;"><label>TRABAJO / PROFESIÓN</label><input type="text" x-model="newContact.trabajo" autocapitalize="words" placeholder="EJ: DISEÑADOR..." style="padding-left: 18px;"></div>
+            <div class="input-group" style="margin-top: 16px;"><label>PREFERENCIAS / COMIDA</label><input type="text" x-model="newContact.comida_pref" placeholder="EJ: VEGETARIANO..." autocapitalize="sentences" style="padding-left: 18px;"></div>
+            <div class="input-row" style="margin-top: 16px;">
+              <div class="input-group"><label>PAREJA</label><input type="text" x-model="newContact.pareja_info" autocapitalize="words" style="padding-left: 18px;"></div>
+              <div class="input-group"><label>MASCOTAS</label><input type="text" x-model="newContact.mascotas" autocapitalize="words" style="padding-left: 18px;"></div>
+            </div>
+            <div class="input-group" style="margin-top: 16px;"><label>FAMILIA</label><input type="text" x-model="newContact.familia_info" placeholder="HIJOS, PADRES..." autocapitalize="sentences" style="padding-left: 18px;"></div>
+            <div class="input-group" style="margin-top: 16px;"><label>NOTAS GENERALES</label><textarea x-model="newContact.notas" rows="4" autocapitalize="sentences" placeholder="CUALQUIER OTRO DETALLE..."></textarea></div>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-main" :disabled="isSavingContact" style="margin-top: 10px;">
+          <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
+          <span x-text="isSavingContact ? 'GUARDANDO...' : (editingContactId ? 'ACTUALIZAR CONTACTO' : 'GUARDAR CONTACTO')"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" x-show="modals.detalle" x-cloak x-transition.opacity @click="closeDetailModal"></div>
+  <div class="bottom-sheet" id="detailSheet" x-show="modals.detalle" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full">
+    <div class="sheet-handle"></div>
+    <button type="button" class="close-btn" aria-label="Cerrar perfil" @click="closeDetailModal">CERRAR</button>
+    
+    <template x-if="selectedContact">
+      <div>
+        <div class="detail-hero">
+          <div class="detail-avatar" :class="getColorHash(selectedContact.nombre || String(selectedContact.id))">
+            <span x-text="getInitials(selectedContact.nombre, selectedContact.apellido)"></span>
+          </div>
+          <div class="detail-name" x-text="formatName(selectedContact.nombre, selectedContact.apellido)"></div>
+          <template x-if="selectedContact.apodo"><div class="detail-nickname" x-text="'«' + selectedContact.apodo + '»'"></div></template>
+          <div class="detail-badges">
+            <div class="detail-badge" x-text="selectedContact.circulo || 'GENERAL'"></div>
+            <template x-if="selectedContact.trabajo"><div class="detail-badge" x-text="selectedContact.trabajo"></div></template>
+          </div>
+        </div>
+
+        <div class="detail-card-group">
+          <div class="detail-row" style="border: none;">
+            <div class="detail-label">
+              <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
+              <span>ÚLTIMA INTERACCIÓN</span>
+            </div>
+            <div class="detail-val" x-text="selectedContact._lastInteractionText || 'AÚN NO HAY REGISTROS'"></div>
+          </div>
+        </div>
+
+        <template x-if="selectedContact.cumpleanos || selectedContact.genero || selectedContact.como_nos_conocimos">
+          <div class="detail-card-group">
+            <div class="detail-group-title">INFORMACIÓN PERSONAL</div>
+            <template x-if="selectedContact.cumpleanos">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="cake" style="width: 14px; height: 14px;"></i>
+                  <span>CUMPLEAÑOS</span>
+                </div>
+                <div class="detail-val" x-text="formatDateFriendly(selectedContact.cumpleanos)"></div>
+              </div>
+            </template>
+            <template x-if="selectedContact.genero">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="user" style="width: 14px; height: 14px;"></i>
+                  <span>GÉNERO</span>
+                </div>
+                <div class="detail-val" x-text="selectedContact.genero"></div>
+              </div>
+            </template>
+            <template x-if="selectedContact.como_nos_conocimos">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="compass" style="width: 14px; height: 14px;"></i>
+                  <span>NOS CONOCIMOS</span>
+                </div>
+                <div class="detail-val" x-text="selectedContact.como_nos_conocimos"></div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="selectedContact.pareja_info || selectedContact.familia_info || selectedContact.mascotas">
+          <div class="detail-card-group">
+            <div class="detail-group-title">CÍRCULO CERCANO</div>
+            <template x-if="selectedContact.pareja_info">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="heart" style="width: 14px; height: 14px;"></i>
+                  <span>PAREJA</span>
+                </div>
+                <div class="detail-val" x-text="selectedContact.pareja_info"></div>
+              </div>
+            </template>
+            <template x-if="selectedContact.familia_info">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="users-round" style="width: 14px; height: 14px;"></i>
+                  <span>FAMILIA</span>
+                </div>
+                <div class="detail-val" x-text="selectedContact.familia_info"></div>
+              </div>
+            </template>
+            <template x-if="selectedContact.mascotas">
+              <div class="detail-row">
+                <div class="detail-label">
+                  <i data-lucide="dog" style="width: 14px; height: 14px;"></i>
+                  <span>MASCOTAS</span>
+                </div>
+                <div class="detail-val" x-text="selectedContact.mascotas"></div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <template x-if="selectedContact.comida_pref">
+          <div class="detail-card-group">
+            <div class="detail-group-title">PREFERENCIAS</div>
+            <div class="detail-row">
+              <div class="detail-label">
+                <i data-lucide="utensils" style="width: 14px; height: 14px;"></i>
+                <span>COMIDA / RESTRICCIONES</span>
+              </div>
+              <div class="detail-val" x-text="selectedContact.comida_pref"></div>
+            </div>
+          </div>
+        </template>
+        
+        <template x-if="selectedContact.notas">
+          <div class="detail-card-group">
+            <div class="detail-group-title">CONTEXTO & NOTAS</div>
+            <div class="detail-row" style="border: none;"><div class="detail-val" style="white-space: pre-line;" x-text="selectedContact.notas"></div></div>
+          </div>
+        </template>
+        
+        <button class="detail-primary-action" @click="openQuickLogMenu(selectedContact.id)">
+          <i data-lucide="message-circle-plus" style="width:18px;height:18px;color:#fff;"></i>
+          Registrar una interacción
+        </button>
+        <div class="detail-status-copy" x-text="selectedContact._health && selectedContact._health.class !== 'hidden' ? healthExplanation(selectedContact) : 'No hay una frecuencia definida para este contacto.'"></div>
+
+        <div class="detail-actions-grid">
+          <button class="btn-detail-action" @click="editContact(selectedContact)">
+            <i data-lucide="pencil" style="width: 15px; height: 15px; color: var(--text-main);"></i>
+            <span>EDITAR</span>
+          </button>
+          <button class="btn-detail-action" @click="quickLogFullEditor(selectedContact.id)">
+            <i data-lucide="notebook-pen" style="width: 15px; height: 15px; color: var(--text-main);"></i>
+            <span>REGISTRAR</span>
+          </button>
+        </div>
+
+        <button class="btn-detail-danger" @click="promptDelete(selectedContact.id, selectedContact.nombre)">
+          <i data-lucide="trash-2" style="width: 14px; height: 14px; color: var(--c-danger);"></i>
+          <span>ELIMINAR CONTACTO</span>
+        </button>
+
+      </div>
+    </template>
+  </div>
+
+  <div class="modal-overlay" x-show="modals.confirmDelete" x-cloak x-transition.opacity></div>
+  <div class="bottom-sheet" x-show="modals.confirmDelete" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500; padding-bottom: max(40px, env(safe-area-inset-bottom));">
+    <div style="text-align: center; padding: 20px 0 30px;">
+      <h2 class="sheet-danger-title">¿ELIMINAR CONTACTO?</h2>
+      <p class="sheet-danger-subtitle" x-text="'SE BORRARÁ A ' + (contactToDelete?.nombre || '').toUpperCase() + ' Y TODO SU HISTORIAL.'"></p>
+      <div style="display: flex; gap: 16px;">
+        <button class="segment-btn glass-panel" style="flex: 1; padding: 20px; color: var(--text-main);" @click="modals.confirmDelete = false">CANCELAR</button>
+        <button class="segment-btn" style="flex: 1; padding: 20px; background: var(--c-danger); color: white; border:none; box-shadow: 0 10px 30px rgba(255, 59, 48, 0.3);" @click="confirmDelete()">ELIMINAR</button>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<div id="toast" class="toast"><span class="material-symbols-rounded">check_circle</span><span id="toastMsg">OK</span></div>
-
-<!-- Carga de Vanilla-Tilt -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+<div id="toast" class="toast" :class="{ 'show': toast.show }"><span x-text="toast.msg"></span></div>
 
 <script>
-  const API_URL = "https://script.google.com/macros/s/AKfycbxDOA0aO-yeReiTPlm9WuaM81emgMPyqq0WOui7zZ-LcZu1fMN1R830OGwqTr4GU-cq/exec";
+  if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().then(granted => { if(granted) console.log("Persist: OK"); }); }
 
-  let contactos = [];
-  let tipoRegGlobal = 'conversacion';
-  let filtroCirculo = 'Todos';
-  let notasLocales = JSON.parse(localStorage.getItem('souvlaki_notas') || '[]');
+  const db = new Dexie('SouvlakiDB');
+  db.version(5).stores({ contacts: '++id, nombre, apellido, circulo', notes: '++id, contactoId, fecha, tipo, timestamp' });
+  
+  const API_URL = "https://script.google.com/macros/s/AKfycbzMb8JqFR6SMEpQrA76JyBsNSL_CtrUoGcJjcjxvYEy9QjyLwoQfdBp7SQ-CPQ72irI/exec";
 
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
-  }
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('appData', () => ({
+      currentView: 'home', isLoading: true, headerOpacity: 1, headerScrolled: false, swipeHintDismissed: localStorage.getItem('souvlaki_swipe_hint') === '1',
+      modals: { nuevo: false, detalle: false, about: false, confirmDelete: false, sortFilter: false, quickLog: false },
+      toast: { show: false, msg: '' }, preventNextClick: false, contactToDelete: null, keyboardOpen: false,
 
-  function setEstadoConexion(texto) {
-    const el = document.getElementById('estadoConexion');
-    if (el) el.textContent = texto || '';
-  }
-
-  window.switchView = function(viewId, btnElement) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
-    btnElement.classList.add('active');
-
-    // Muestra u oculta el botón '+' global según la vista (Desaparece en Notas)
-    const btnGlobalAdd = document.getElementById('btnGlobalAdd');
-    if (btnGlobalAdd) {
-      btnGlobalAdd.style.display = (viewId === 'view-log') ? 'none' : 'block';
-    }
-  };
-
-  window.abrirModal = function(id) {
-    document.getElementById(id).classList.add('active');
-    document.getElementById('overlay-' + id.split('-')[1]).classList.add('active');
-  };
-
-  window.cerrarModal = function(id) {
-    document.getElementById(id).classList.remove('active');
-    document.getElementById('overlay-' + id.split('-')[1]).classList.remove('active');
-
-    if (id === 'modal-detalle') {
-      const allWrappers = document.querySelectorAll('.card-wrapper');
-      allWrappers.forEach(w => {
-        w.classList.remove('expanded', 'dimmed');
-        w.style.transform = ''; 
-      });
-      if ('vibrate' in navigator) navigator.vibrate(10); 
-    }
-  };
-
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      document.querySelectorAll('.bottom-sheet.active').forEach(sheet => cerrarModal(sheet.id));
-    }
-  });
-
-  window.setTipoRegGlobal = function(tipo) {
-    tipoRegGlobal = tipo;
-    const btnC = document.getElementById('btnConvGlobal');
-    const btnA = document.getElementById('btnActGlobal');
-    const lbl = document.getElementById('lblDetalleGlobal');
-    if(tipo === 'conversacion') { btnC.classList.add('active'); btnA.classList.remove('active'); lbl.innerText = '¿Qué hablaron?'; } 
-    else { btnA.classList.add('active'); btnC.classList.remove('active'); lbl.innerText = '¿Qué hicieron?'; }
-  };
-
-  async function cargarContactos() {
-    setEstadoConexion('Conectando…');
-    try {
-      const res = await fetch(`${API_URL}?action=getContactos`, { cache: 'no-store' });
-      const datosCrudos = await res.json();
-      contactos = Array.isArray(datosCrudos) ? datosCrudos.filter(c => c.id_contacto && c.nombre) : [];
-      localStorage.setItem('souvlaki_contactos_cache', JSON.stringify(contactos));
-      renderFiltros();
-      renderizarDirectorio(contactos);
-      llenarSelect();
-      renderNotas(); 
-      setEstadoConexion(`${contactos.length} contactos`);
-    } catch (e) {
-      const cache = localStorage.getItem('souvlaki_contactos_cache');
-      if (cache) {
-        contactos = JSON.parse(cache);
-        renderFiltros();
-        renderizarDirectorio(contactos);
-        llenarSelect();
-        renderNotas();
-        setEstadoConexion('Modo sin conexión');
-      } else {
-        setEstadoConexion('Sin conexión');
-      }
-    }
-  }
-
-  function getColorHash(nombre) {
-    const themes = ['theme-purple', 'theme-lime', 'theme-blue', 'theme-orange', 'theme-pink', 'theme-cyan'];
-    let hash = 0;
-    for (let i = 0; i < nombre.length; i++) hash = nombre.charCodeAt(i) + ((hash << 5) - hash);
-    return themes[Math.abs(hash) % themes.length];
-  }
-
-  window.renderizarDirectorio = function(lista) {
-    const contenedor = document.getElementById('listaContactos');
-    if (!lista.length) {
-      contenedor.innerHTML = '<div class="empty-state">Sin contactos</div>';
-      return;
-    }
-
-    contenedor.innerHTML = lista.map((c, index) => {
-      const theme = getColorHash(String(c.nombre || c.id_contacto));
-      const id = escapeHtml(c.id_contacto);
+      contacts: [], notes: [], searchQuery: '', filterCircle: 'Todos', noteFilter: 'Todos',
+      sortMode: 'alfabetico', activeCard: null, selectedContact: null, stocardExpanded: false,
+      activeQuickLogContact: null, showAdvancedContactFields: false,
       
-      let n = escapeHtml(c.nombre || '').trim();
-      let a = escapeHtml(c.apellido || '').trim();
-      let nombreLimpio = (n + ' ' + a).trim().replace(/([a-zñáéíóú])([A-ZÑÁÉÍÓÚ])/g, '$1 $2');
-      
-      const circulo = escapeHtml(c.circulo || 'General');
-      const trabajo = c.trabajo_info ? `<div class="pill">${escapeHtml(c.trabajo_info)}</div>` : '';
-      
-      return `
-        <div class="card-wrapper" id="wrapper-${id}" style="z-index: ${lista.length - index};">
-          <div class="swipe-background"><span class="material-symbols-rounded">delete</span></div>
-          <div class="swipe-container" style="transition: transform 0.3s ease;">
-            <div class="wallet-card ${theme}" data-contact-id="${id}" role="button" tabindex="0">
-              <div class="card-header"><div class="card-title">${nombreLimpio}</div></div>
-              <div class="card-pills"><div class="pill">${circulo}</div>${trabajo}</div>
-              <div class="card-action-btn"><span class="material-symbols-rounded">arrow_forward</span></div>
-            </div>
-          </div>
-        </div>`;
-    }).join('');
+      editingContactId: null,
+      editingNoteId: null,
 
-    if (window.VanillaTilt) {
-      VanillaTilt.init(document.querySelectorAll('.wallet-card'), {
-        max: 12,
-        speed: 400,
-        glare: true,
-        'max-glare': 0.35,
-        scale: 1.0,
-        axis: "x", 
-        gyroscope: true
-      });
-    }
+      quickLogStep: 1,
+      quickLogText: '',
+      quickLogType: 'conversacion',
+      quickLogNote: '',
 
-    contenedor.querySelectorAll('.card-wrapper').forEach(wrapper => {
-      const swipeContainer = wrapper.querySelector('.swipe-container');
-      const card = wrapper.querySelector('.wallet-card');
-      const bg = wrapper.querySelector('.swipe-background'); 
-      const id = card.dataset.contactId;
+      isSavingContact: false, isSavingNote: false,
+      newContact: { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '' },
+      newNote: { tipo: 'conversacion', contactoId: '', fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' },
 
-      let startX = 0;
-      let currentX = 0;
-      let isSwiping = false;
-      let hasMoved = false;
+      async initApp() {
+        await this.loadData();
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(el => { el.addEventListener('focus', () => this.keyboardOpen = true); el.addEventListener('blur', () => this.keyboardOpen = false); });
 
-      swipeContainer.addEventListener('touchstart', e => {
-        startX = e.touches[0].clientX;
-        isSwiping = false;
-        hasMoved = false;
-        swipeContainer.style.transition = 'none'; 
-      }, {passive: true});
+        this.$watch('currentView', () => this.renderIcons());
+        this.$watch('modals', () => this.renderIcons());
+        this.$watch('quickLogStep', () => this.renderIcons());
+        this.$watch('showAdvancedContactFields', () => this.renderIcons());
+        this.renderIcons();
+      },
 
-      swipeContainer.addEventListener('touchmove', e => {
-        currentX = e.touches[0].clientX;
-        const diff = currentX - startX;
-        
-        if (diff < -15 && !wrapper.classList.contains('expanded')) {
-          isSwiping = true;
-          hasMoved = true;
-          bg.style.opacity = '1'; 
-          const move = Math.max(diff, -100); 
-          swipeContainer.style.transform = `translateX(${move}px)`;
-        }
-      }, {passive: true});
-
-      swipeContainer.addEventListener('touchend', e => {
-        if (!hasMoved) return; 
-        swipeContainer.style.transition = 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)';
-        const diff = currentX - startX;
-
-        if (diff < -65) { 
-          if ('vibrate' in navigator) navigator.vibrate([15, 40, 15]); 
-          const c = contactos.find(x => String(x.id_contacto) === String(id));
-          if (confirm(`¿Descartar a ${c.nombre}?`)) {
-             borrarContacto(id, c.nombre);
-          } else {
-             swipeContainer.style.transform = 'translateX(0)';
-             bg.style.opacity = '0'; 
-          }
-        } else {
-          swipeContainer.style.transform = 'translateX(0)'; 
-          bg.style.opacity = '0'; 
-        }
-        
-        setTimeout(() => { isSwiping = false; hasMoved = false; }, 50); 
-      });
-
-      const openWallet = () => {
-        if (isSwiping || hasMoved) return; 
-        if ('vibrate' in navigator) navigator.vibrate(12);
-
-        const c = contactos.find(x => String(x.id_contacto) === String(id));
-        if (!c) return;
-
-        const allWrappers = document.querySelectorAll('.card-wrapper');
-        allWrappers.forEach(w => {
-          if (w === wrapper) {
-            const rect = w.getBoundingClientRect();
-            const moveY = 75 - rect.top; 
-            w.classList.add('expanded');
-            w.style.transform = `translateY(${moveY}px) scale(1.02)`;
-          } else {
-            w.classList.add('dimmed');
+      renderIcons() {
+        this.$nextTick(() => {
+          if (window.lucide) {
+            lucide.createIcons();
           }
         });
+      },
 
-        setTimeout(() => { abrirDetalle(c); }, 150);
-      };
+      get isNavHidden() { return this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
 
-      card.addEventListener('click', openWallet);
-      card.addEventListener('keydown', e => { if (e.key === 'Enter') openWallet(); });
-    });
-  };
+      async loadData() {
+        this.isLoading = true;
+        try {
+          const rawContacts = await db.contacts.toArray();
+          const dbNotes = await db.notes.toArray();
+          this.notes = dbNotes.sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id));
+          this.computeContactStats(rawContacts);
+          this.renderIcons();
+        } catch (e) { console.error("ERROR LOCAL", e); } finally { this.isLoading = false; }
+      },
 
-  // Función actualizada para renderizar el historial con Tipo de Nota Explicito
-  window.renderNotas = function() {
-    const contenedor = document.getElementById('listaNotas');
-    if (!contenedor) return;
+      computeContactStats(rawContacts) {
+        this.contacts = rawContacts.map(c => {
+             const cNotes = this.notes.filter(n => parseInt(n.contactoId) === parseInt(c.id));
+             let lastTs = null; let lastText = "SIN REGISTROS";
+             if (cNotes.length > 0) {
+                 lastTs = cNotes[0].timestamp || new Date(cNotes[0].fecha + 'T12:00:00').getTime();
+                 const days = Math.floor((Date.now() - lastTs) / (1000 * 60 * 60 * 24));
+                 if (days === 0) lastText = "HOY"; else if (days === 1) lastText = "AYER"; else lastText = `HACE ${days} DÍAS`;
+             }
+             let health = { text: '', class: 'hidden' };
+             let score = -1;
+             if (c.frecuencia_deseada && c.frecuencia_deseada > 0) {
+                 if (!lastTs) { score = 999; } 
+                 else {
+                     const daysSince = (Date.now() - lastTs) / (1000 * 60 * 60 * 24);
+                     score = daysSince / c.frecuencia_deseada;
+                 }
+                 if (score < 0.75) health = { text: 'AL DÍA', class: 'status-good' };
+                 else if (score <= 1.2) health = { text: 'PRONTO', class: 'status-warn' };
+                 else health = { text: 'SALUDAR', class: 'status-cold' };
+             }
+             return { ...c, _lastInteractionTs: lastTs, _lastInteractionText: lastText, _attentionScore: score, _health: health };
+        });
+      },
 
-    if (!notasLocales.length) {
-      contenedor.innerHTML = '<div class="empty-state" style="padding: 20px;">No hay registros recientes.</div>';
-      return;
-    }
+      get uniqueCircles() { return [...new Set(this.contacts.map(c => c.circulo || 'GENERAL'))].sort(); },
 
-    const reversa = [...notasLocales].reverse();
-    contenedor.innerHTML = reversa.map(n => {
-      const c = contactos.find(x => String(x.id_contacto) === String(n.contactoId));
-      let nombre = 'Desconocido';
-      if (c) {
-         let n_text = escapeHtml(c.nombre || '').trim();
-         let a_text = escapeHtml(c.apellido || '').trim();
-         nombre = (n_text + ' ' + a_text).trim().replace(/([a-zñáéíóú])([A-ZÑÁÉÍÓÚ])/g, '$1 $2');
+      get sortedAndFilteredContacts() {
+        let list = this.contacts.filter(c => {
+          const q = this.searchQuery.trim().toLowerCase();
+          const text = [c.nombre, c.apellido, c.apodo, c.trabajo, c.notas].filter(Boolean).join(' ').toLowerCase();
+          return text.includes(q) && (this.filterCircle === 'Todos' || (c.circulo || 'GENERAL').toUpperCase() === this.filterCircle.toUpperCase());
+        });
+
+        if (this.sortMode === 'alfabetico') { list.sort((a, b) => a.nombre.localeCompare(b.nombre)); } 
+        else if (this.sortMode === 'reciente') { list.sort((a, b) => (b._lastInteractionTs || 0) - (a._lastInteractionTs || 0)); } 
+        else if (this.sortMode === 'atencion') { list.sort((a, b) => b._attentionScore - a._attentionScore); }
+        
+        return list;
+      },
+
+      get primaryContacts() { const all = this.sortedAndFilteredContacts; return all.length <= 5 ? all : all.slice(0, 5); },
+      get secondaryContacts() { const all = this.sortedAndFilteredContacts; return all.length <= 5 ? [] : all.slice(5); },
+      get attentionContacts() {
+        return [...this.contacts]
+          .filter(c => c._health && c._health.class === 'status-cold')
+          .sort((a,b) => (b._attentionScore || 0) - (a._attentionScore || 0))
+          .slice(0, 3);
+      },
+      get hasActiveFilters() { return !!this.searchQuery.trim() || this.filterCircle !== 'Todos' || this.sortMode !== 'alfabetico'; },
+      get contactResultLabel() {
+        const total = this.sortedAndFilteredContacts.length;
+        if (this.searchQuery.trim()) return total === 1 ? '1 resultado' : `${total} resultados`;
+        return total === 1 ? '1 contacto' : `${total} contactos`;
+      },
+      get contactsListAlphabetic() { return [...this.contacts].sort((a,b)=>a.nombre.localeCompare(b.nombre)); },
+
+      get upcomingBirthdays() {
+        const today = new Date(); today.setHours(0,0,0,0);
+        const upcoming = [];
+        this.contacts.forEach(c => {
+            if (!c || !c.cumpleanos) return;
+            const parts = c.cumpleanos.split('-');
+            if (parts.length < 2) return;
+            const m = parseInt(parts[1]); const d = parseInt(parts[2] || parts[0]);
+            if (isNaN(m) || isNaN(d)) return;
+            let bdayThisYear = new Date(today.getFullYear(), m - 1, d);
+            if (bdayThisYear < today) bdayThisYear.setFullYear(today.getFullYear() + 1);
+            const diffDays = Math.ceil((bdayThisYear - today) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 14) upcoming.push({ ...c, days: diffDays });
+        });
+        return upcoming.sort((a,b) => a.days - b.days);
+      },
+
+      get groupedNotes() {
+        let filtered = this.noteFilter === 'Todos' ? this.notes : this.notes.filter(n => {
+               const c = this.contacts.find(x => x.id === parseInt(n.contactoId));
+               return c && (c.circulo || 'GENERAL').toUpperCase() === this.noteFilter.toUpperCase();
+            });
+        
+        const groups = {}; const today = new Date(); today.setHours(0,0,0,0);
+        filtered.slice(0, 60).forEach(n => {
+           let nDate = new Date(n.fecha + 'T12:00:00'); nDate.setHours(0,0,0,0);
+           const diffDays = Math.floor((today - nDate) / (1000 * 60 * 60 * 24));
+           let groupName = "ANTERIORES";
+           if (diffDays === 0) groupName = "HOY"; else if (diffDays === 1) groupName = "AYER";
+           else if (diffDays <= 7) groupName = "ESTA SEMANA"; else if (diffDays <= 30) groupName = "ESTE MES";
+           if(!groups[groupName]) groups[groupName] = [];
+           groups[groupName].push(n);
+        });
+        
+        const orderedGroups = {};
+        ["HOY", "AYER", "ESTA SEMANA", "ESTE MES", "ANTERIORES"].forEach(k => { if(groups[k]) orderedGroups[k] = groups[k]; });
+        return orderedGroups;
+      },
+
+      backgroundSync(payload) {
+        if(!navigator.onLine) return; 
+        fetch(API_URL, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'text/plain;charset=utf-8' }})
+        .catch(err => console.log('Sync offline fallback.'));
+      },
+
+      healthExplanation(contact) {
+        if (!contact || !contact._health || contact._health.class === 'hidden') return '';
+        if (!contact._lastInteractionTs) return 'Todavía no hay una interacción registrada.';
+        if (contact._health.class === 'status-good') return 'El vínculo está dentro de la frecuencia que elegiste.';
+        if (contact._health.class === 'status-warn') return 'Se acerca el momento que elegiste para volver a hablar.';
+        return 'Hace más tiempo del deseado que no registrás una interacción.';
+      },
+
+      attentionReason(contact) {
+        if (!contact) return '';
+        if (!contact._lastInteractionTs) return 'Todavía no hay una interacción registrada';
+        return contact._lastInteractionText === 'HOY' ? 'Hablaron hoy' : `Último contacto: ${contact._lastInteractionText.toLowerCase()}`;
+      },
+
+      dismissSwipeHint() {
+        this.swipeHintDismissed = true;
+        localStorage.setItem('souvlaki_swipe_hint', '1');
+      },
+
+      handleScroll() { 
+        this.headerScrolled = window.scrollY > 45;
+        this.headerOpacity = 1;
+      },
+
+      openNewContactModal() {
+        this.editingContactId = null;
+        this.newContact = { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '' };
+        this.showAdvancedContactFields = false;
+        this.modals.nuevo = true;
+      },
+
+      editContact(c) {
+        this.closeDetailModal();
+        this.editingContactId = c.id;
+        this.newContact = { ...c };
+        this.showAdvancedContactFields = true;
+        this.modals.nuevo = true;
+      },
+
+      async saveContact() {
+        this.isSavingContact = true;
+        try {
+          let cToSave = { 
+            ...this.newContact, 
+            frecuencia_deseada: parseInt(this.newContact.frecuencia_deseada || 0)
+          };
+
+          cToSave = JSON.parse(JSON.stringify(cToSave));
+
+          if (this.editingContactId) {
+            cToSave.id = this.editingContactId;
+            await db.contacts.put(cToSave);
+            this.showToast("CONTACTO ACTUALIZADO");
+            this.backgroundSync({ action: 'editContacto', data: cToSave });
+          } else {
+            cToSave.id = Date.now();
+            await db.contacts.add(cToSave);
+            this.showToast("CONTACTO CREADO");
+            this.backgroundSync({ action: 'addContacto', data: cToSave });
+          }
+
+          this.closeNewContactModal();
+          await this.loadData();
+        } catch (e) { 
+          console.error(e);
+          this.showToast("ERROR AL GUARDAR"); 
+        } finally { 
+          this.isSavingContact = false; 
+        }
+      },
+
+      closeNewContactModal() {
+        this.modals.nuevo = false;
+        setTimeout(() => { 
+          this.showAdvancedContactFields = false; 
+          this.editingContactId = null;
+        }, 400); 
+      },
+
+      editNote(note) {
+        this.editingNoteId = note.id;
+        this.newNote = { ...note, contactoId: String(note.contactoId) };
+        this.currentView = 'log';
+        window.scrollTo(0, 0);
+      },
+
+      resetNoteForm() {
+        this.editingNoteId = null;
+        this.newNote = { tipo: 'conversacion', contactoId: '', fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' };
+      },
+
+      async saveNote() {
+        this.isSavingNote = true;
+        try {
+          let noteToSave = { 
+            ...this.newNote, 
+            contactoId: parseInt(this.newNote.contactoId), 
+            timestamp: this.editingNoteId ? (this.newNote.timestamp || Date.now()) : Date.now() 
+          };
+
+          noteToSave = JSON.parse(JSON.stringify(noteToSave));
+
+          if (this.editingNoteId) {
+            noteToSave.id = this.editingNoteId;
+            await db.notes.put(noteToSave);
+            this.showToast("REGISTRO ACTUALIZADO");
+            this.backgroundSync({ action: 'editNota', data: noteToSave });
+          } else {
+            noteToSave.id = Date.now();
+            await db.notes.add(noteToSave);
+            this.showToast("REGISTRO GUARDADO");
+            this.backgroundSync({ action: 'addNota', data: noteToSave });
+          }
+
+          this.resetNoteForm();
+          await this.loadData();
+        } catch (e) { 
+          console.error(e);
+          this.showToast("ERROR AL GUARDAR"); 
+        } finally { 
+          this.isSavingNote = false; 
+        }
+      },
+
+      promptDelete(id, nombre) {
+        this.closeDetailModal(); this.contactToDelete = { id, nombre };
+        setTimeout(() => { this.modals.confirmDelete = true; }, 150);
+      },
+
+      async confirmDelete() {
+        if (!this.contactToDelete) return;
+        try {
+          const idToDelete = this.contactToDelete.id;
+          await db.contacts.delete(idToDelete);
+          await db.notes.where('contactoId').equals(idToDelete).delete();
+          
+          this.modals.confirmDelete = false; this.showToast("CONTACTO ELIMINADO");
+          this.contactToDelete = null; await this.loadData();
+          this.backgroundSync({ action: 'deleteContacto', id: idToDelete });
+        } catch(e) {}
+      },
+
+      quickLogFullEditor(contactId) {
+        this.closeQuickLogModal();
+        this.closeDetailModal(); this.currentView = 'log';
+        this.resetNoteForm();
+        this.newNote.contactoId = String(contactId);
+        window.scrollTo(0, 0);
+      },
+
+      openQuickLogMenu(contactId) {
+        this.activeQuickLogContact = this.contacts.find(c => c.id === contactId);
+        this.quickLogStep = 1;
+        this.quickLogNote = '';
+        this.modals.quickLog = true;
+      },
+
+      closeQuickLogModal() {
+        this.modals.quickLog = false;
+        setTimeout(() => {
+          this.quickLogStep = 1;
+          this.quickLogNote = '';
+        }, 300);
+      },
+
+      selectQuickOption(text, type) {
+        this.quickLogText = text;
+        this.quickLogType = type;
+        this.quickLogStep = 2;
+      },
+
+      async confirmQuickLog() {
+        try {
+            let noteToSave = { 
+              tipo: this.quickLogType, 
+              contactoId: parseInt(this.activeQuickLogContact.id), 
+              fecha: new Date().toISOString().split('T')[0], 
+              detalle: this.quickLogText, 
+              nota: this.quickLogNote || '', 
+              timestamp: Date.now(), 
+              id: Date.now() 
+            };
+            
+            noteToSave = JSON.parse(JSON.stringify(noteToSave));
+
+            await db.notes.add(noteToSave);
+            this.showToast("INTERACCIÓN REGISTRADA");
+            this.closeQuickLogModal();
+            await this.loadData();
+            this.backgroundSync({ action: 'addNota', data: noteToSave });
+        } catch (e) { 
+          console.error(e);
+          this.showToast("ERROR AL GUARDAR"); 
+        }
+      },
+
+      showToast(msg) { this.toast.msg = msg; this.toast.show = true; setTimeout(() => this.toast.show = false, 2800); },
+      formatName(n, a) { return ((n||'') + ' ' + (a||'')).trim(); },
+      getInitials(n, a) { return ((n||'').charAt(0) + (a||'').charAt(0)).toUpperCase(); },
+      getContactRawName(id) { const c = this.contacts.find(x => x.id === parseInt(id)); return c ? (c.nombre || String(id)) : 'X'; },
+      getInitialsFromId(id) { const c = this.contacts.find(x => x.id === parseInt(id)); return c ? this.getInitials(c.nombre, c.apellido) : '?'; },
+      getContactName(id) { const c = this.contacts.find(x => x.id === parseInt(id)); return c ? this.formatName(c.nombre, c.apellido) : 'ELIMINADO'; },
+      formatDateFriendly(dateStr) {
+        if (!dateStr) return ''; const parts = dateStr.split('-');
+        if (parts.length >= 2) { const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']; return `${parts[parts.length-1]} ${months[parseInt(parts[parts.length-2])-1]}`; }
+        return dateStr;
+      },
+      getColorHash(str) {
+        const themes = ['theme-titanium', 'theme-aurora', 'theme-obsidian', 'theme-sunrise', 'theme-emerald', 'theme-violet'];
+        let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31) + str.charCodeAt(i);
+        return themes[Math.abs(hash) % themes.length];
+      },
+
+      openDetail(contactId) {
+        if (this.activeCard === contactId || this.preventNextClick) return;
+        if ('vibrate' in navigator) navigator.vibrate(10);
+        this.activeCard = contactId; this.selectedContact = this.contacts.find(c => c.id === contactId);
+        const sheet = document.getElementById('detailSheet'); if(sheet) sheet.scrollTop = 0;
+        setTimeout(() => { 
+          this.modals.detalle = true; 
+          this.renderIcons();
+        }, 100);
+      },
+
+      closeDetailModal() { this.modals.detalle = false; this.activeCard = null; },
+
+      initSwipe(el, contact) {
+        let startX = 0, startY = 0, isSwiping = false, isScrolling = false, isPointerDown = false;
+        
+        const getPos = e => {
+           if (e.touches && e.touches.length > 0) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+           return { clientX: e.clientX, clientY: e.clientY };
+        };
+
+        const onStart = e => {
+          isPointerDown = true;
+          const pos = getPos(e);
+          startX = pos.clientX;
+          startY = pos.clientY;
+          isSwiping = false; 
+          isScrolling = false; 
+          el.style.transition = 'none';
+          if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId);
+        };
+
+        const onMove = e => {
+          if (!isPointerDown || this.activeCard || isScrolling) return;
+          const bgLog = document.getElementById('bg-log-' + contact.id) || document.getElementById('bg-log-s-' + contact.id);
+          const bgDel = document.getElementById('bg-del-' + contact.id) || document.getElementById('bg-del-s-' + contact.id);
+          
+          const pos = getPos(e);
+          const diffX = pos.clientX - startX; 
+          const diffY = pos.clientY - startY;
+          
+          if (!isSwiping) {
+              if (Math.abs(diffY) > Math.abs(diffX) + 5) { isScrolling = true; return; }
+              if (Math.abs(diffX) > 10) { 
+                  isSwiping = true; 
+                  if(e.cancelable) e.preventDefault();
+              }
+          }
+          if (isSwiping) {
+            if(e.cancelable) e.preventDefault();
+            let move = diffX;
+            requestAnimationFrame(() => {
+              if(move > 0) {
+                 move = Math.min(move, 100);
+                 if(bgLog) bgLog.style.opacity = Math.min(move / 70, 1);
+                 if(bgDel) bgDel.style.opacity = 0;
+              } else {
+                 move = Math.max(move, -100);
+                 if(bgDel) bgDel.style.opacity = Math.min(Math.abs(move) / 70, 1);
+                 if(bgLog) bgLog.style.opacity = 0;
+              }
+              el.style.transform = `translate3d(${move}px, 0, 0)`;
+            });
+          }
+        };
+
+        const resetPosition = () => {
+           const bgLog = document.getElementById('bg-log-' + contact.id) || document.getElementById('bg-log-s-' + contact.id);
+           const bgDel = document.getElementById('bg-del-' + contact.id) || document.getElementById('bg-del-s-' + contact.id);
+           el.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+           requestAnimationFrame(() => { 
+               el.style.transform = 'translate3d(0,0,0)'; 
+               if(bgLog) bgLog.style.opacity = '0'; 
+               if(bgDel) bgDel.style.opacity = '0'; 
+           });
+        };
+
+        const onEnd = e => {
+          if (!isPointerDown) return;
+          isPointerDown = false;
+          
+          let diffX = 0, diffY = 0;
+          if(e.type.includes('pointer') || e.type.includes('mouse')) { 
+             diffX = e.clientX - startX; 
+             diffY = e.clientY - startY;
+          }
+          else if(e.changedTouches && e.changedTouches.length > 0) { 
+             diffX = e.changedTouches[0].clientX - startX; 
+             diffY = e.changedTouches[0].clientY - startY;
+          }
+          
+          if (!isSwiping) { 
+            resetPosition(); 
+            if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5 && !isScrolling) {
+                this.openDetail(contact.id);
+            }
+            return; 
+          }
+          
+          if (diffX > 75) { 
+             if ('vibrate' in navigator) navigator.vibrate(15); 
+             this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300);
+             this.openQuickLogMenu(contact.id);
+          } else if (diffX < -75) { 
+             if ('vibrate' in navigator) navigator.vibrate([15, 40, 15]); 
+             this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300);
+             this.promptDelete(contact.id, contact.nombre);
+          }
+          resetPosition();
+        };
+
+        el.addEventListener('pointerdown', onStart);
+        el.addEventListener('pointermove', onMove, { passive: false });
+        el.addEventListener('pointerup', onEnd);
+        el.addEventListener('pointercancel', () => { isPointerDown = false; resetPosition(); });
       }
-      
-      const tipoTexto = n.tipo === 'conversacion' ? 'Conversación' : 'Actividad';
-      const icono = n.tipo === 'conversacion' ? 'forum' : 'local_activity';
-      
-      return `
-        <div style="background: var(--input-bg); padding: 16px; border-radius: 16px;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <strong style="font-size: 0.95rem;">${nombre}</strong> 
-              <span style="font-size: 0.65rem; background: rgba(0,0,0,0.06); padding: 4px 8px; border-radius: 99px; font-weight: 700; color: var(--text-muted);">${tipoTexto}</span>
-            </div>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">${escapeHtml(n.fecha)}</span>
-          </div>
-          <div style="font-size: 0.85rem; display: flex; gap: 6px; align-items: flex-start; margin-bottom: ${n.nota ? '4px' : '0'};">
-            <span class="material-symbols-rounded" style="font-size: 1rem; color: var(--text-muted);">${icono}</span>
-            <span>${escapeHtml(n.detalle)}</span>
-          </div>
-          ${n.nota ? `<div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.05);">${escapeHtml(n.nota)}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-  };
-
-  window.abrirDetalle = function(c) {
-    let n = escapeHtml(c.nombre || '').trim();
-    let a = escapeHtml(c.apellido || '').trim();
-    let nombreHeader = (n + ' ' + a).trim().replace(/([a-zñáéíóú])([A-ZÑÁÉÍÓÚ])/g, '$1 $2');
-    
-    if (c.apodo) nombreHeader += ` "${escapeHtml(c.apodo)}"`;
-    document.getElementById('detNombre').innerText = nombreHeader;
-    
-    let html = ``;
-    let datosPersonales = '';
-    
-    if(c.cumpleanos) {
-      let fechaLimpia = c.cumpleanos;
-      if (fechaLimpia.includes('T')) {
-        const partes = fechaLimpia.split('T')[0].split('-'); 
-        if(partes.length === 3) fechaLimpia = `${partes[2]}/${partes[1]}/${partes[0]}`; 
-        else fechaLimpia = fechaLimpia.split('T')[0];
-      }
-      datosPersonales += `<div class="detail-item"><span><strong>Cumpleaños:</strong> ${escapeHtml(fechaLimpia)}</span></div>`;
-    }
-
-    if(c.genero) datosPersonales += `<div class="detail-item"><span><strong>Género:</strong> ${escapeHtml(c.genero)}</span></div>`;
-    if(c.trabajo_info) datosPersonales += `<div class="detail-item"><span><strong>Trabajo:</strong> ${escapeHtml(c.trabajo_info)}</span></div>`;
-    if(c.como_nos_conocimos) datosPersonales += `<div class="detail-item"><span><strong>Nos conocimos:</strong> ${escapeHtml(c.como_nos_conocimos)}</span></div>`;
-    if(c.comida_pref) datosPersonales += `<div class="detail-item"><span><strong>Comida:</strong> ${escapeHtml(c.comida_pref)}</span></div>`;
-    if(datosPersonales !== '') html += `<div class="detail-section"><div class="detail-title">Información Personal</div>${datosPersonales}</div>`;
-
-    let circuloCercano = '';
-    if(c.pareja_info) circuloCercano += `<div class="detail-item"><span><strong>Pareja:</strong> ${escapeHtml(c.pareja_info)}</span></div>`;
-    if(c.familia_info) circuloCercano += `<div class="detail-item"><span><strong>Familia:</strong> ${escapeHtml(c.familia_info)}</span></div>`;
-    if(c.mascotas) circuloCercano += `<div class="detail-item"><span><strong>Mascotas:</strong> ${escapeHtml(c.mascotas)}</span></div>`;
-    if(circuloCercano !== '') html += `<div class="detail-section"><div class="detail-title">Círculo Cercano</div>${circuloCercano}</div>`;
-
-    if(c.notas_generales) html += `<div class="detail-section"><div class="detail-title">Notas</div><div class="detail-item"><span>${escapeHtml(c.notas_generales)}</span></div></div>`;
-
-    html += `
-      <button class="btn-main" style="width: 100%;" onclick="irARegistroRapido('${c.id_contacto}')">
-        <span class="material-symbols-rounded">edit_square</span> Registrar interacción
-      </button>
-      <button class="btn-danger" style="width: 100%;" onclick="borrarContacto('${c.id_contacto}', '${c.nombre}')">
-        <span class="material-symbols-rounded">delete</span> Borrar Ficha
-      </button>
-    `;
-
-    document.getElementById('detContenido').innerHTML = html;
-    abrirModal('modal-detalle');
-  };
-
-  window.irARegistroRapido = function(idContacto) {
-    cerrarModal('modal-detalle');
-    switchView('view-log', document.getElementById('nav-log-btn'));
-    document.getElementById('regContactoGlobal').value = idContacto;
-  };
-
-  window.borrarContacto = async function(id, nombre) {
-    cerrarModal('modal-detalle');
-    mostrarToast("Borrando...");
-    try {
-      await fetch(`${API_URL}?action=deleteContacto&id_contacto=${encodeURIComponent(id)}`);
-      mostrarToast("Contacto eliminado");
-      cargarContactos();
-    } catch (e) { mostrarToast("Error al borrar"); }
-  };
-
-  window.filtrarContactos = function() {
-    const q = document.getElementById('inputBuscar').value.trim().toLowerCase();
-    const filtrados = contactos.filter(c => {
-      const texto = [c.nombre,c.apellido,c.apodo,c.circulo,c.trabajo_info,c.comida_pref,c.pareja_info,c.familia_info,c.mascotas,c.notas_generales].filter(Boolean).join(' ').toLowerCase();
-      return texto.includes(q) && (filtroCirculo === 'Todos' || String(c.circulo || 'General') === filtroCirculo);
-    });
-    renderizarDirectorio(filtrados);
-  };
-
-  function renderFiltros() {
-    const el = document.getElementById('filtrosCirculo');
-    if (!el) return;
-    const valores = ['Todos', ...new Set(contactos.map(c => c.circulo || 'General'))];
-    el.innerHTML = valores.map(v => `<button type="button" class="filter-chip ${v === filtroCirculo ? 'active' : ''}" data-filter="${escapeHtml(v)}">${escapeHtml(v)}</button>`).join('');
-    el.querySelectorAll('.filter-chip').forEach(btn => btn.addEventListener('click', () => {
-      filtroCirculo = btn.dataset.filter;
-      renderFiltros();
-      filtrarContactos();
     }));
-  }
-
-  window.llenarSelect = function() {
-    const s = document.getElementById('regContactoGlobal');
-    s.innerHTML = '<option value="">Seleccionar...</option>';
-    contactos.forEach(c => s.innerHTML += `<option value="${c.id_contacto}">${c.nombre} ${c.apellido || ''}</option>`);
-  };
-
-  window.mostrarToast = function(msg) {
-    const t = document.getElementById('toast');
-    document.getElementById('toastMsg').innerText = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3000);
-  };
-
-  document.addEventListener('DOMContentLoaded', () => {
-    const btnFiltro = document.getElementById('btnFiltro');
-    const panel = document.getElementById('panelFiltros');
-    btnFiltro.addEventListener('click', (e) => {
-      e.stopPropagation();
-      panel.classList.toggle('open');
-      btnFiltro.classList.toggle('active', panel.classList.contains('open'));
-    });
-
-    document.getElementById('formRegistroGlobal').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btnGuardarRegGlobal');
-      btn.disabled = true; btn.innerText = 'Guardando...';
-
-      const id = document.getElementById('regContactoGlobal').value;
-      const fecha = document.getElementById('regFechaGlobal').value;
-      const detalle = encodeURIComponent(document.getElementById('regDetalleGlobal').value);
-      const nota = encodeURIComponent(document.getElementById('regNotaGlobal').value);
-      const accion = tipoRegGlobal === 'conversacion' ? 'addConversacion' : 'addActividad';
-      const paramsExtras = tipoRegGlobal === 'conversacion' ? `que_dijimos=${detalle}` : `que_hicimos=${detalle}`;
-      
-      try {
-        const res = await fetch(`${API_URL}?id_contacto=${encodeURIComponent(id)}&fecha=${encodeURIComponent(fecha)}&action=${accion}&${paramsExtras}&nota=${nota}`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        mostrarToast("Registro exitoso");
-        
-        notasLocales.push({
-          contactoId: id,
-          fecha: fecha,
-          tipo: tipoRegGlobal,
-          detalle: decodeURIComponent(detalle),
-          nota: decodeURIComponent(nota)
-        });
-        localStorage.setItem('souvlaki_notas', JSON.stringify(notasLocales));
-        renderNotas();
-        
-        document.getElementById('formRegistroGlobal').reset();
-        switchView('view-home', document.getElementById('nav-home-btn'));
-      } catch (err) { 
-        mostrarToast("Error al guardar"); 
-      } finally { 
-        btn.disabled = false; btn.innerText = 'Guardar entrada'; 
-      }
-    });
-
-    document.getElementById('formNuevoContacto').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btnGuardarContacto');
-      btn.disabled = true; btn.innerText = 'Creando...';
-
-      const p = (id) => encodeURIComponent(document.getElementById(id).value);
-      const url = `${API_URL}?action=addContacto&nombre=${p('cNombre')}&apellido=${p('cApellido')}&apodo=${p('cApodo')}&genero=${p('cGenero')}&cumpleanos=${p('cCumpleanos')}&como_nos_conocimos=${p('cConocimos')}&trabajo_info=${p('cTrabajo')}&comida_pref=${p('cComida')}&pareja_info=${p('cPareja')}&familia_info=${p('cFamilia')}&mascotas=${p('cMascotas')}&notas_generales=${p('cNotas')}&circulo=${p('cCirculo')}`;
-
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        mostrarToast("Contacto creado");
-        document.getElementById('formNuevoContacto').reset();
-        cerrarModal('modal-nuevo');
-        cargarContactos();
-      } catch (err) { 
-        mostrarToast("Error al guardar"); 
-      } finally { 
-        btn.disabled = false; btn.innerText = 'Crear Ficha'; 
-      }
-    });
-
-    renderNotas(); 
-    cargarContactos();
   });
 </script>
-
 </body>
 </html>
