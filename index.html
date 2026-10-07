@@ -64,7 +64,7 @@
 
       /* Tipografía - Espaciado de letras */
       --ls-tight: -0.02em;    /* Para títulos grandes */
-      --ls-normal: 0;         /* Para cuerpo de texto */
+      --ls-normal: 0;          /* Para cuerpo de texto */
       --ls-wide: 0.05em;      /* Para etiquetas en mayúsculas (Micro) */
     }
     
@@ -317,8 +317,8 @@
     .card-wrapper.expanded { z-index: 300 !important; }
     .card-wrapper.dimmed { opacity: 0.4; pointer-events: none; filter: grayscale(1); }
 
-    .swipe-container { width: 100%; touch-action: pan-y; will-change: transform; position: relative;}
-    .swipe-background { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: var(--card-radius); display: flex; align-items: center; color: white; z-index: 0; opacity: 0; transition: opacity 0.2s; font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide);}
+    .swipe-container { width: 100%; touch-action: pan-y; will-change: transform; position: relative; border-radius: var(--card-radius); overflow: hidden; }
+    .swipe-background { position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-radius: var(--card-radius); display: flex; align-items: center; color: white; z-index: 0; opacity: 0; transition: opacity 0.2s ease; font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide);}
     .swipe-bg-delete { background: rgba(255, 59, 48, 0.9); justify-content: flex-end; padding-right: 28px; }
     .swipe-bg-log { background: rgba(52, 199, 89, 0.9); justify-content: flex-start; padding-left: 28px; }
 
@@ -1061,7 +1061,7 @@
         <p class="feature-text">Registra conversaciones, actividades compartidas y detalles importantes. No dejes que la memoria te falle en lo que de verdad le importa a tus seres queridos.</p>
       </div>
 
-      <!-- 03 · Filosofía Ética (Sin nombrar MonicaHQ) -->
+      <!-- 03 · Filosofía Ética -->
       <div class="feature-card glass-panel">
         <div class="feature-card-header">
           <span class="feature-num">03</span>
@@ -1314,8 +1314,8 @@
   <div class="modal-overlay" x-show="modals.confirmDelete" x-cloak x-transition.opacity></div>
   <div class="bottom-sheet" x-show="modals.confirmDelete" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500; padding-bottom: max(40px, env(safe-area-inset-bottom));">
     <div style="text-align: center; padding: 20px 0 30px;">
-      <h2 class="sheet-danger-title">¿ELIMINAR CONTACTO?</h2>
-      <p class="sheet-danger-subtitle" x-text="'SE BORRARÁ A ' + (contactToDelete?.nombre || '').toUpperCase() + ' Y TODO SU HISTORIAL.'"></p>
+      <h2 class="sheet-danger-title">¿Eliminar contacto?</h2>
+      <p class="sheet-danger-subtitle" x-text="'Se borrará a ' + (contactToDelete?.nombre || '') + ' y todo su historial.'"></p>
       <div style="display: flex; gap: 16px;">
         <button class="segment-btn glass-panel" style="flex: 1; padding: 20px; color: var(--text-main);" @click="modals.confirmDelete = false">CANCELAR</button>
         <button class="segment-btn" style="flex: 1; padding: 20px; background: var(--c-danger); color: white; border:none; box-shadow: 0 10px 30px rgba(255, 59, 48, 0.3);" @click="confirmDelete()">ELIMINAR</button>
@@ -1721,6 +1721,10 @@
       initSwipe(el, contact) {
         let startX = 0, startY = 0, isSwiping = false, isScrolling = false, isPointerDown = false;
         
+        const cardTarget = el.querySelector('.wallet-card');
+        const bgLog = el.querySelector('.swipe-bg-log');
+        const bgDel = el.querySelector('.swipe-bg-delete');
+
         const getPos = e => {
            if (e.touches && e.touches.length > 0) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
            return { clientX: e.clientX, clientY: e.clientY };
@@ -1733,14 +1737,12 @@
           startY = pos.clientY;
           isSwiping = false; 
           isScrolling = false; 
-          el.style.transition = 'none';
+          if (cardTarget) cardTarget.style.transition = 'none';
           if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId);
         };
 
         const onMove = e => {
           if (!isPointerDown || this.activeCard || isScrolling) return;
-          const bgLog = document.getElementById('bg-log-' + contact.id) || document.getElementById('bg-log-s-' + contact.id);
-          const bgDel = document.getElementById('bg-del-' + contact.id) || document.getElementById('bg-del-s-' + contact.id);
           
           const pos = getPos(e);
           const diffX = pos.clientX - startX; 
@@ -1760,23 +1762,23 @@
               if(move > 0) {
                  move = Math.min(move, 100);
                  if(bgLog) bgLog.style.opacity = Math.min(move / 70, 1);
-                 if(bgDel) bgDel.style.opacity = 0;
+                 if(bgDel) bgDel.style.opacity = '0';
               } else {
                  move = Math.max(move, -100);
                  if(bgDel) bgDel.style.opacity = Math.min(Math.abs(move) / 70, 1);
-                 if(bgLog) bgLog.style.opacity = 0;
+                 if(bgLog) bgLog.style.opacity = '0';
               }
-              el.style.transform = `translate3d(${move}px, 0, 0)`;
+              if (cardTarget) cardTarget.style.transform = `translate3d(${move}px, 0, 0)`;
             });
           }
         };
 
         const resetPosition = () => {
-           const bgLog = document.getElementById('bg-log-' + contact.id) || document.getElementById('bg-log-s-' + contact.id);
-           const bgDel = document.getElementById('bg-del-' + contact.id) || document.getElementById('bg-del-s-' + contact.id);
-           el.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+           if (cardTarget) cardTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
+           if (bgLog) bgLog.style.transition = 'opacity 0.3s ease';
+           if (bgDel) bgDel.style.transition = 'opacity 0.3s ease';
            requestAnimationFrame(() => { 
-               el.style.transform = 'translate3d(0,0,0)'; 
+               if (cardTarget) cardTarget.style.transform = 'translate3d(0,0,0)'; 
                if(bgLog) bgLog.style.opacity = '0'; 
                if(bgDel) bgDel.style.opacity = '0'; 
            });
