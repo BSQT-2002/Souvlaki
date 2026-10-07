@@ -672,7 +672,7 @@
       <div class="search-container">
         <div class="search-wrapper">
           <i data-lucide="search" class="search-icon" style="width:18px;height:18px;"></i>
-          <input type="text" x-model="searchQuery" placeholder="Buscar a alguien…" autocomplete="off" aria-label="Buscar contactos" class="glass-panel">
+          <input type="text" x-model="searchQuery" placeholder="Buscar a alguien..." autocomplete="off" aria-label="Buscar contactos" class="glass-panel">
           <button x-show="searchQuery" x-cloak type="button" class="search-clear" aria-label="Limpiar búsqueda" @click="searchQuery = ''">
             <i data-lucide="x" style="width:16px;height:16px;"></i>
           </button>
@@ -807,7 +807,7 @@
     <main x-show="currentView === 'log'" x-cloak x-transition.opacity.duration.300ms>
       <div style="margin: 10px 0 30px;">
         <h2 class="page-title" x-text="editingNoteId ? 'EDITAR NOTA' : 'REGISTRO'"></h2>
-        <p class="page-subtitle" x-text="editingNoteId ? 'ACTUALIZÁ LA INFORMACIÓN DE ESTA ENTRADA.' : 'GUARDÁ UNA CHARLA O PLAN.'"></p>
+        <p class="page-subtitle" x-text="editingNoteId ? 'ACTUALIZÁ LA INFORMACIÓN DE ESTA ENTRADA.' : 'Guardá una charla o plan.'"></p>
       </div>
       
       <form @submit.prevent="saveNote">
@@ -820,7 +820,7 @@
           <label>CONTACTO</label>
           <div class="search-wrapper">
             <select x-model="newNote.contactoId" required class="glass-panel" style="padding-left: 18px;">
-              <option value="">SELECCIONAR...</option>
+              <option value="">Seleccionar...</option>
               <template x-for="c in contactsListAlphabetic" :key="c.id">
                 <option :value="c.id" x-text="formatName(c.nombre, c.apellido)"></option>
               </template>
@@ -838,7 +838,7 @@
         </div>
         <div class="input-group">
           <label>SEGUIMIENTO / CONTEXTO (OPCIONAL)</label>
-          <input type="text" x-model="newNote.nota" placeholder="EJ: ACORDAMOS VERNOS EL VIERNES..." class="glass-panel" autocapitalize="sentences" style="padding-left: 18px;">
+          <input type="text" x-model="newNote.nota" placeholder="Ej: acordamos vernos el viernes" class="glass-panel" autocapitalize="sentences" style="padding-left: 18px;">
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -847,7 +847,7 @@
           </template>
           <button type="submit" class="btn-main" :disabled="isSavingNote" style="flex: 2;">
             <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
-            <span x-text="isSavingNote ? 'GUARDANDO...' : (editingNoteId ? 'ACTUALIZAR ENTRADA' : 'GUARDAR ENTRADA')"></span>
+            <span x-text="isSavingNote ? 'GUARDANDO...' : (editingNoteId ? 'ACTUALIZAR' : 'GUARDAR')"></span>
           </button>
         </div>
       </form>
@@ -1029,7 +1029,7 @@
   <div class="modal-overlay" x-show="modals.about" x-cloak x-transition.opacity @click="modals.about = false"></div>
   <div class="bottom-sheet" x-show="modals.about" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 600;">
     <div class="sheet-handle"></div>
-    <button type="button" class="close-btn" @click="modals.about = false">CERRAR</button>
+    <button type="button" class="close-btn" @click="modals.about = false">x</button>
     
     <div class="about-header">
       <h2 class="brand-wordmark" style="margin-bottom: 4px; transform: none; pointer-events: none;">souvlaki</h2>
@@ -1164,7 +1164,7 @@
         
         <button type="submit" class="btn-main" :disabled="isSavingContact" style="margin-top: 10px;">
           <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
-          <span x-text="isSavingContact ? 'GUARDANDO...' : (editingContactId ? 'ACTUALIZAR CONTACTO' : 'GUARDAR CONTACTO')"></span>
+          <span x-text="isSavingContact ? 'GUARDANDO...' : (editingContactId ? 'ACTUALIZAR' : 'GUARDAR CONTACTO')"></span>
         </button>
       </form>
     </div>
@@ -1173,7 +1173,7 @@
   <div class="modal-overlay" x-show="modals.detalle" x-cloak x-transition.opacity @click="closeDetailModal"></div>
   <div class="bottom-sheet" id="detailSheet" x-show="modals.detalle" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full">
     <div class="sheet-handle"></div>
-    <button type="button" class="close-btn" aria-label="Cerrar perfil" @click="closeDetailModal">CERRAR</button>
+    <button type="button" class="close-btn" aria-label="Cerrar perfil" @click="closeDetailModal">x</button>
     
     <template x-if="selectedContact">
       <div>
@@ -1393,7 +1393,7 @@
       computeContactStats(rawContacts) {
         this.contacts = rawContacts.map(c => {
              const cNotes = this.notes.filter(n => parseInt(n.contactoId) === parseInt(c.id));
-             let lastTs = null; let lastText = "SIN REGISTROS";
+             let lastTs = null; let lastText = "Sin registros";
              if (cNotes.length > 0) {
                  lastTs = cNotes[0].timestamp || new Date(cNotes[0].fecha + 'T12:00:00').getTime();
                  const days = Math.floor((Date.now() - lastTs) / (1000 * 60 * 60 * 24));
