@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="Souvlaki">
   <title>Souvlaki — Agenda Humana</title>
 
-  <!-- Prevenir error 404 del Favicon en consola -->
+  <!-- Prevenir error 404 del Favicon -->
   <link rel="icon" href="data:,">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,53 +22,96 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   
   <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script defer src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
   <style>
     /* =========================================================
-       SISTEMA DE TIPOGRAFÍA Y VARIABLES GENERALES
-       Estandarización de tamaños, pesos y espaciado
+       SISTEMA DE TIPOGRAFÍA Y VARIABLES GENERALES (Light & Dark)
        ========================================================= */
     :root {
-      /* Colores y Layout */
+      /* Colores Modo Claro (Predeterminado) */
       --bg-color: #F2F2F7; 
       --desktop-bg: #F2F2F7; 
       --surface-border: rgba(0, 0, 0, 0.08);
       --text-main: #1C1C1E; 
       --text-muted: #8E8E93;
       --input-bg: #FFFFFF; 
-      --nav-bg: rgba(255, 255, 255, 0.9); 
+      --card-bg: #FFFFFF;
+      --nav-bg: rgba(255, 255, 255, 0.88); 
       --c-danger: #ff3b30; 
       --header-height: 120px; 
       --card-radius: 28px;
       --max-app-width: 500px;
-      --anim-smooth: cubic-bezier(.16,1,.3,1);
 
       /* Tipografía - Familia */
       --font-main: 'Plus Jakarta Sans', -apple-system, sans-serif;
       
-      /* Tipografía - Tamaños (Escala modular) */
-      --fs-micro: 0.75rem;    /* 12px - Etiquetas, pills, metadata */
-      --fs-small: 0.875rem;   /* 14px - Textos secundarios, descripciones */
-      --fs-base: 1rem;        /* 16px - Cuerpo principal, inputs, botones */
-      --fs-lg: 1.125rem;      /* 18px - Subtítulos de tarjetas, headers secundarios */
-      --fs-xl: 1.5rem;        /* 24px - Títulos de sección */
-      --fs-2xl: 2rem;          /* 32px - Nombres de tarjetas, títulos grandes */
-      --fs-display: 2.75rem;  /* 44px - Wordmark, Hero titles */
+      /* Tipografía - Escala modular */
+      --fs-micro: 0.75rem;    /* 12px */
+      --fs-small: 0.875rem;   /* 14px */
+      --fs-base: 1rem;        /* 16px */
+      --fs-lg: 1.125rem;      /* 18px */
+      --fs-xl: 1.5rem;        /* 24px */
+      --fs-2xl: 2rem;          /* 32px */
+      --fs-display: 2.75rem;  /* 44px */
 
-      /* Tipografía - Pesos */
+      /* Pesos */
       --fw-regular: 400;
       --fw-medium: 500;
       --fw-semibold: 600;
       --fw-bold: 700;
-      --fw-extrabold: 800;    /* Usado en lugar de 900 para mantener elegancia sin perder peso */
+      --fw-extrabold: 800;
 
-      /* Tipografía - Espaciado de letras */
-      --ls-tight: -0.02em;    /* Para títulos grandes */
-      --ls-normal: 0;          /* Para cuerpo de texto */
-      --ls-wide: 0.05em;      /* Para etiquetas en mayúsculas (Micro) */
+      /* Espaciados */
+      --ls-tight: -0.02em;
+      --ls-normal: 0;
+      --ls-wide: 0.05em;
     }
-    
+
+    /* MODO OSCURO OLED DEEP BLACK */
+    @media (prefers-color-scheme: dark) {
+      :root:not(.light-theme) {
+        --bg-color: #000000; 
+        --desktop-bg: #000000; 
+        --surface-border: rgba(255, 255, 255, 0.12);
+        --text-main: #F2F2F7; 
+        --text-muted: #98989D;
+        --input-bg: #000000; 
+        --card-bg: #000000;
+        --nav-bg: rgba(0, 0, 0, 0.92); 
+        --c-danger: #FF453A; 
+      }
+      :root:not(.light-theme) .glass-panel { box-shadow: none; border-color: rgba(255, 255, 255, 0.12); }
+    }
+
+    /* FORZADO DE TEMAS VÍA CLASE EN BODY */
+    body.dark-theme {
+      --bg-color: #000000; 
+      --desktop-bg: #000000; 
+      --surface-border: rgba(255, 255, 255, 0.12);
+      --text-main: #F2F2F7; 
+      --text-muted: #98989D;
+      --input-bg: #000000; 
+      --card-bg: #000000;
+      --nav-bg: rgba(0, 0, 0, 0.92); 
+      --c-danger: #FF453A; 
+    }
+    body.dark-theme .glass-panel { box-shadow: none; border-color: rgba(255, 255, 255, 0.12); }
+
+    body.light-theme {
+      --bg-color: #F2F2F7; 
+      --desktop-bg: #F2F2F7; 
+      --surface-border: rgba(0, 0, 0, 0.08);
+      --text-main: #1C1C1E; 
+      --text-muted: #8E8E93;
+      --input-bg: #FFFFFF; 
+      --card-bg: #FFFFFF;
+      --nav-bg: rgba(255, 255, 255, 0.88); 
+      --c-danger: #ff3b30; 
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     
     body { 
@@ -79,6 +122,7 @@
       min-height: 100vh; overflow-x: hidden; overscroll-behavior-y: none;
       font-weight: var(--fw-regular);
       line-height: 1.5;
+      transition: background-color 0.3s, color 0.3s;
     }
 
     [x-cloak] { display: none !important; }
@@ -105,58 +149,47 @@
         min-height: 100vh;
         box-shadow: none; 
         overflow-x: hidden; 
+        isolation: isolate;
     }
     
     @media (min-width: 501px) {
         .app-container { border-left: none; border-right: none; }
         header { max-width: var(--max-app-width); }
-        .bottom-nav { width: min(360px, calc(var(--max-app-width) - 40px)) !important; }
+        .bottom-nav { width: min(420px, calc(var(--max-app-width) - 40px)) !important; }
         .bottom-sheet { max-width: var(--max-app-width); margin: 0 auto; border-left: none; border-right: none; }
         .fs-modal { max-width: var(--max-app-width); left: 50% !important; transform: translateX(-50%); border-left: none; border-right: none; }
         .fab-add { right: calc(50% - (var(--max-app-width) / 2) + 24px) !important; }
         .toast { width: 100%; max-width: 400px; }
     }
 
-    .main-app-content { padding: 180px 16px 140px; width: 100%; }
+    .main-app-content { padding: 180px 16px 140px; width: 100%; position: relative; z-index: 1; }
 
     .glass-panel {
-      background: #FFFFFF;
+      background: var(--card-bg);
       border: 1px solid var(--surface-border);
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
       transform: translate3d(0,0,0);
     }
 
     /* Encabezado */
-    header {
-      --header-progress: 0;
-      --header-height-reduction: 0px;
-      --header-bg-alpha: 0;
-      --header-blur: 0px;
-      --header-shadow-alpha: 0;
-      --header-translate: 0px;
-      position: fixed; top: 0; left: 0; right: 0;
-      height: calc(120px - var(--header-height-reduction));
-      display: flex; align-items: flex-start; justify-content: center;
-      z-index: 100; padding: 0 20px;
-      padding-top: max(24px, env(safe-area-inset-top));
-      margin: 0 auto;
-      background: rgba(255,255,255,var(--header-bg-alpha));
-      backdrop-filter: blur(var(--header-blur));
-      -webkit-backdrop-filter: blur(var(--header-blur));
-      box-shadow: 0 1px 0 rgba(0,0,0,var(--header-shadow-alpha));
-      transform: translate3d(0, var(--header-translate), 0);
-      transition:
-        height .55s cubic-bezier(.16,1,.3,1),
-        padding-top .55s cubic-bezier(.16,1,.3,1),
-        background .45s ease,
-        box-shadow .45s ease,
-        backdrop-filter .45s ease,
-        transform .55s cubic-bezier(.16,1,.3,1);
+    header { 
+      position: absolute; top: 0; left: 0; right: 0; height: var(--header-height); 
+      display: flex; align-items: flex-start; justify-content: center; 
+      z-index: 100; padding: 0 20px; padding-top: max(24px, env(safe-area-inset-top));
+      position: fixed; margin: 0 auto;
+      transition: opacity .25s ease, transform .35s cubic-bezier(.16,1,.3,1), height .35s ease,
+                  background .25s ease, box-shadow .25s ease, backdrop-filter .25s ease;
       transform-origin: top center;
     }
 
     header.header-compact {
+      height: 74px !important;
       align-items: center !important;
+      padding-top: max(8px, env(safe-area-inset-top)) !important;
+      background: var(--nav-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 1px 0 var(--surface-border);
     }
 
     .brand-wordmark { 
@@ -167,17 +200,15 @@
       line-height: 1; 
       margin: 0 auto; 
       color: var(--text-main); 
-      transition: transform .55s cubic-bezier(.16,1,.3,1), font-size .55s cubic-bezier(.16,1,.3,1);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       transform-origin: top center;
       pointer-events: auto;
     }
     
     header.header-compact .brand-wordmark {
       font-size: var(--fs-xl);
-      transform: translateY(-1px);
     }
 
-    /* Botón de Información sutil y minimalista */
     .btn-about-header {
       position: absolute; 
       right: 20px; 
@@ -206,124 +237,51 @@
       transform: translateY(-50%);
     }
 
-    header.header-compact .btn-about-header:active {
-      transform: translateY(-50%) scale(0.92);
-    }
-
-    /* Títulos de sección grandes (Log) */
-    .page-title {
-      font-size: var(--fs-display);
-      line-height: 1;
-      letter-spacing: var(--ls-tight);
-      font-weight: var(--fw-extrabold);
-      text-transform: uppercase;
-    }
-    .page-subtitle {
-      color: var(--text-muted);
-      font-size: var(--fs-base);
-      margin-top: 12px;
-      font-weight: var(--fw-semibold);
-    }
-    .section-title {
-      font-size: var(--fs-2xl);
-      font-weight: var(--fw-extrabold);
-      letter-spacing: var(--ls-tight);
-      text-transform: uppercase;
-    }
+    /* Títulos */
+    .page-title { font-size: var(--fs-display); line-height: 1; letter-spacing: var(--ls-tight); font-weight: var(--fw-extrabold); text-transform: uppercase; }
+    .page-subtitle { color: var(--text-muted); font-size: var(--fs-base); margin-top: 12px; font-weight: var(--fw-semibold); }
+    .section-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); text-transform: uppercase; }
 
     /* Buscador */
     .search-container { position: relative; margin-bottom: 24px; display: flex; gap: 8px; z-index: 10; }
     .search-wrapper { position: relative; flex: 1; display: flex; align-items: center; }
-    .search-wrapper input { 
-      width: 100%; border-radius: 99px; padding: 16px 46px 16px 48px; 
-      font-size: var(--fs-base); font-weight: var(--fw-medium); font-family: var(--font-main);
-      color: var(--text-main); outline: none; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease;
-    }
+    .search-wrapper input { width: 100%; border-radius: 99px; padding: 16px 46px 16px 48px; font-size: var(--fs-base); font-weight: var(--fw-medium); font-family: var(--font-main); color: var(--text-main); outline: none; transition: border-color 0.2s, background 0.2s; }
     .search-icon { position: absolute; left: 18px; pointer-events: none; }
-    .search-wrapper input:focus { border-color: rgba(0,0,0,.14); background: #fff; box-shadow: 0 5px 18px rgba(0,0,0,.045); }
+    .search-wrapper input:focus { border-color: rgba(128,128,128,0.4); background: var(--card-bg); }
     .search-wrapper input::placeholder { color: var(--text-muted); font-weight: var(--fw-medium); }
 
-    .search-clear {
-      position: absolute; right: 8px; width: 38px; height: 38px; border: 0; border-radius: 50%;
-      background: #F2F2F7; color: var(--text-muted); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; z-index: 2; transition: transform 0.2s;
-    }
+    .search-clear { position: absolute; right: 8px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--bg-color); color: var(--text-muted); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 2; transition: transform 0.2s; }
     .search-clear:active { transform: scale(.92); }
 
-    /* Focus visible */
-    button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [tabindex]:focus-visible {
-      outline: 3px solid rgba(28,28,30,.18); outline-offset: 3px;
-    }
+    .btn-settings { padding: 0 18px; border-radius: 99px; height: 52px; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: var(--fs-small); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; transition: all .2s; flex-shrink: 0; }
+    .btn-settings.active { background: var(--text-main); color: var(--bg-color); }
 
-    .btn-settings {
-      padding: 0 18px; border-radius: 99px; height: 52px;
-      color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 6px;
-      font-size: var(--fs-small); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
-      cursor: pointer; transition: all .2s; flex-shrink: 0; 
-    }
-    .btn-settings.active { background: var(--text-main); color: #fff; }
-    .btn-settings:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
-
-    .active-filter-row {
-      display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin: -8px 0 18px; padding: 2px 2px 5px;
-    }
+    .active-filter-row { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; margin: -8px 0 18px; padding: 2px 2px 5px; }
     .active-filter-row::-webkit-scrollbar { display:none; }
-    
-    .active-filter-chip {
-      flex: 0 0 auto; border: 1px solid rgba(0,0,0,.08); background: #fff; color: var(--text-main);
-      border-radius: 999px; padding: 7px 10px 7px 12px;
-      font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-micro);
-      display: inline-flex; align-items: center; gap: 7px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.03);
-    }
+    .active-filter-chip { flex: 0 0 auto; border: 1px solid var(--surface-border); background: var(--card-bg); color: var(--text-main); border-radius: 999px; padding: 7px 10px 7px 12px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-micro); display: inline-flex; align-items: center; gap: 7px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.03); }
     .active-filter-chip span { color: var(--text-muted); font-size: var(--fs-micro); }
 
     /* Birthday Radar */
     .birthday-radar { margin-bottom: 24px; animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1); z-index: 10; position: relative;}
-    .radar-title { 
-      font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--c-danger); 
-      display: flex; align-items: center; gap: 8px; margin-bottom: 12px; 
-      text-transform: uppercase; letter-spacing: var(--ls-wide); padding-left: 4px; 
-    }
-    .radar-scroll { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; padding-left: 4px; scrollbar-width: none; -ms-overflow-style: none; }
+    .radar-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--c-danger); display: flex; align-items: center; gap: 8px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: var(--ls-wide); padding-left: 4px; }
+    .radar-scroll { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 10px; padding-left: 4px; scrollbar-width: none; }
     .radar-scroll::-webkit-scrollbar { display: none; }
     
-    .bday-card { 
-      padding: 14px 16px; border-radius: 24px; 
-      display: flex; align-items: center; gap: 16px; 
-      min-width: 260px; flex-shrink: 0; cursor: pointer;
-      background: linear-gradient(135deg, rgba(255, 59, 48, 0.05) 0%, rgba(255, 149, 0, 0.02) 100%);
-      border: 1px solid rgba(255, 59, 48, 0.15); transition: box-shadow 0.2s;
-    }
-    .bday-card:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
-    .bday-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%);
-      display: flex; align-items: center; justify-content: center;
-      font-size: var(--fs-base); color: #fff; font-weight: var(--fw-extrabold);
-      box-shadow: 0 4px 15px rgba(255, 59, 48, 0.2);
-    }
+    .bday-card { padding: 14px 16px; border-radius: 24px; display: flex; align-items: center; gap: 16px; min-width: 260px; flex-shrink: 0; cursor: pointer; background: linear-gradient(135deg, rgba(255, 59, 48, 0.08) 0%, rgba(255, 149, 0, 0.03) 100%); border: 1px solid rgba(255, 59, 48, 0.2); transition: box-shadow 0.2s; }
+    .bday-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #ff3b30 0%, #ff9500 100%); display: flex; align-items: center; justify-content: center; font-size: var(--fs-base); color: #fff; font-weight: var(--fw-extrabold); box-shadow: 0 4px 15px rgba(255, 59, 48, 0.2); }
     .bday-details { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
     .bday-name { font-weight: var(--fw-bold); font-size: var(--fs-base); color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
     .bday-time { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); }
-    .bday-action {
-      width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
-      background: #fff; border: 1px solid rgba(255,59,48,.16);
-      display: flex; align-items: center; justify-content: center;
-    }
+    .bday-action { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; background: var(--card-bg); border: 1px solid rgba(255,59,48,.2); display: flex; align-items: center; justify-content: center; }
 
     @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* Estados Vacíos */
-    .empty-state { 
-      text-align: center; padding: 56px 24px; display: flex; flex-direction: column; 
-      align-items: center; justify-content: center; gap: 12px; 
-      border: 1px dashed rgba(0,0,0,.12); border-radius: 28px; background: rgba(255,255,255,.65); margin-top: 6px;
-    }
-    .empty-state-icon { width: 54px; height: 54px; border-radius: 18px; background: #F2F2F7; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+    .empty-state { text-align: center; padding: 56px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border: 1px dashed var(--surface-border); border-radius: 28px; background: var(--card-bg); margin-top: 6px; }
+    .empty-state-icon { width: 54px; height: 54px; border-radius: 18px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
     .empty-state-title { font-size: var(--fs-lg); font-weight: var(--fw-bold); color: var(--text-main); }
     .empty-state-help { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); line-height: 1.5; max-width: 320px; margin: 0 auto;}
-    .empty-state-action { border: 0; background: var(--text-main); color: #fff; border-radius: 999px; padding: 12px 17px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: transform 0.2s;}
-    .empty-state-action:active { transform: scale(0.96); }
+    .empty-state-action { border: 0; background: var(--text-main); color: var(--bg-color); border-radius: 999px; padding: 12px 17px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: transform 0.2s;}
 
     /* Listas y Tarjetas Principales */
     .primary-list { display: flex; flex-direction: column; gap: 16px; padding-top: 6px; position: relative; z-index: 10; }
@@ -337,33 +295,42 @@
     .swipe-bg-log { background: rgba(52, 199, 89, 0.9); justify-content: flex-start; padding-left: 28px; }
 
     .wallet-card { 
-      min-height: 156px; width: 100%; border-radius: var(--card-radius); padding: 26px 24px; 
+      min-height: 156px; width: 100%; border-radius: var(--card-radius); padding: 24px 22px; 
       display: flex; flex-direction: column; justify-content: center; position: relative; 
       cursor: pointer; overflow: hidden; user-select: none; z-index: 2;
       transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s; 
       border: 1px solid var(--surface-border);
       box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
-    .wallet-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(0,0,0,.075); }
-    .wallet-card:active { transform: translateY(1px) scale(.985); box-shadow: none; }
+    .wallet-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,.07); }
+    .wallet-card:active { transform: translateY(2px) scale(0.98); box-shadow: none; }
     
     .card-header { display: flex; flex-direction: column; align-items: flex-start; z-index: 3; width: 100%; }
-    .card-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 14px; width: 100%; display: flex; color: var(--text-main);}
+    .card-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 12px; width: 100%; display: flex; color: var(--text-main);}
     .truncate-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; flex-shrink: 1; min-width: 0; }
     
-    .card-pills { display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; }
-    .pill { border: 1px solid rgba(0,0,0,0.1); border-radius: 99px; padding: 6px 12px; font-size: var(--fs-micro); font-weight: var(--fw-semibold); letter-spacing: var(--ls-wide); text-transform: uppercase; background: rgba(255,255,255,0.5); color: var(--text-main); }
+    .card-pills { display: flex; gap: 8px; flex-wrap: wrap; z-index: 3; align-items: center; }
+    .pill { border: 1px solid var(--surface-border); border-radius: 99px; padding: 5px 11px; font-size: var(--fs-micro); font-weight: var(--fw-semibold); letter-spacing: var(--ls-wide); text-transform: uppercase; background: rgba(255,255,255,0.4); color: var(--text-main); }
     
     .pill-health { display: inline-flex; align-items: center; border: none; }
-    .status-good { background: rgba(52, 199, 89, 0.1); border: 1px solid rgba(52, 199, 89, 0.3); color: #248A3D; }
-    .status-warn { background: rgba(255, 149, 0, 0.1); border: 1px solid rgba(255, 149, 0, 0.3); color: #B26A00; }
-    .status-cold { background: var(--text-main); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .status-good { background: rgba(52, 199, 89, 0.15); border: 1px solid rgba(52, 199, 89, 0.3); color: #248A3D; }
+    .status-warn { background: rgba(255, 149, 0, 0.15); border: 1px solid rgba(255, 149, 0, 0.3); color: #B26A00; }
+    .status-cold { background: var(--text-main); color: var(--bg-color); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
 
-    .card-secondary { margin-top: 14px; display: flex; align-items: center; gap: 7px; color: rgba(28,28,30,.62); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
+    .card-secondary { margin-top: 12px; display: flex; align-items: center; gap: 7px; color: var(--text-muted); font-size: var(--fs-micro); font-weight: var(--fw-semibold); }
     .card-secondary i { width: 14px; height: 14px; }
-    .card-health-copy { font-size: var(--fs-micro); font-weight: var(--fw-semibold); color: rgba(28,28,30,.58); margin-top: 6px; }
+    .card-health-copy { font-size: var(--fs-micro); font-weight: var(--fw-semibold); color: var(--text-muted); margin-top: 6px; }
 
-    /* Themes Tarjetas */
+    /* AVATAR STACK (Miniavatares de contactos vinculados) */
+    .avatar-stack-wrapper { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--surface-border); }
+    .avatar-stack-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+    .avatar-stack { display: flex; align-items: center; }
+    .avatar-stack-item { width: 28px; height: 28px; border-radius: 50%; background: var(--text-main); color: var(--bg-color); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; border: 2px solid var(--card-bg); margin-left: -8px; cursor: pointer; transition: transform 0.2s; }
+    .avatar-stack-item:first-child { margin-left: 0; }
+    .avatar-stack-item:hover { transform: scale(1.15); z-index: 5; }
+    .avatar-stack-more { background: var(--text-muted); color: #fff; }
+
+    /* Themes Tarjetas - Modo Claro & Oscuro */
     .theme-titanium { background-color: #FFFFFF; }
     .theme-aurora { background-color: #FFF0F0; }
     .theme-obsidian { background-color: #F0F4FF; }
@@ -371,67 +338,47 @@
     .theme-emerald { background-color: #F0FAF5; }
     .theme-violet { background-color: #F8F0FF; }
 
+    @media (prefers-color-scheme: dark) {
+      :root:not(.light-theme) .theme-titanium { background-color: #000000; }
+      :root:not(.light-theme) .theme-aurora { background-color: #2D1B20; }
+      :root:not(.light-theme) .theme-obsidian { background-color: #1A2238; }
+      :root:not(.light-theme) .theme-sunrise { background-color: #2D2418; }
+      :root:not(.light-theme) .theme-emerald { background-color: #162B22; }
+      :root:not(.light-theme) .theme-violet { background-color: #241A33; }
+    }
+    body.dark-theme .theme-titanium { background-color: #000000; }
+    body.dark-theme .theme-aurora { background-color: #2D1B20; }
+    body.dark-theme .theme-obsidian { background-color: #1A2238; }
+    body.dark-theme .theme-sunrise { background-color: #2D2418; }
+    body.dark-theme .theme-emerald { background-color: #162B22; }
+    body.dark-theme .theme-violet { background-color: #241A33; }
+
     /* Tarjetero Secundario */
     .stocard-deck { margin-top: 42px; position: relative; z-index: 5; }
-    .stocard-header { 
-      background: #FFFFFF; color: var(--text-main); border-radius: 24px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; 
-      cursor: pointer; position: relative; z-index: 100; border: 1px solid var(--surface-border);
-      transition: background 0.2s, box-shadow 0.2s;
-    }
+    .stocard-header { background: var(--card-bg); color: var(--text-main); border-radius: 24px; padding: 18px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; position: relative; z-index: 100; border: 1px solid var(--surface-border); transition: background 0.2s, box-shadow 0.2s; }
     .stocard-header:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
-    .stocard-header:active { background: #F2F2F7; transform: scale(0.99); }
+    .stocard-header:active { background: var(--bg-color); transform: scale(0.99); }
     
     .stocard-header-copy { display: flex; flex-direction: column; gap: 2px; }
     .stocard-brand { font-size: var(--fs-base); font-weight: var(--fw-bold); }
     .stocard-subtitle { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-medium); }
-    .stocard-badge { background: rgba(0,0,0,0.05); color: var(--text-main); border-radius: 99px; padding: 6px 14px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);}
+    .stocard-badge { background: var(--bg-color); color: var(--text-main); border-radius: 99px; padding: 6px 14px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); border: 1px solid var(--surface-border);}
     
-    .stocard-stack-container { display: flex; flex-direction: column; transition: all .6s cubic-bezier(.16,1,.3,1); padding-top: 16px; position: relative; }
-    .stocard-stack-container.collapsed .card-wrapper { margin-bottom: -115px; transition: margin .55s cubic-bezier(.16,1,.3,1), transform .55s cubic-bezier(.16,1,.3,1); }
+    .stocard-stack-container { display: flex; flex-direction: column; transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1); padding-top: 16px; position: relative; }
+    .stocard-stack-container.collapsed .card-wrapper { margin-bottom: -115px; transition: margin 0.4s ease, transform 0.4s ease; }
     .stocard-stack-container.collapsed .wallet-card { filter: brightness(0.95); } 
-    .stocard-stack-container.expanded .card-wrapper { margin-bottom: 16px; transition: margin .6s cubic-bezier(.16,1,.3,1); }
+    .stocard-stack-container.expanded .card-wrapper { margin-bottom: 16px; transition: margin 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
     .stocard-stack-container.expanded .wallet-card { filter: none; }
-
-    /* Atención (Sugerencias) */
-    .attention-section {
-      margin: 2px 0 28px; padding: 20px; border-radius: 28px;
-      background: linear-gradient(135deg, #fff 0%, #f7f7f9 100%);
-      border: 1px solid var(--surface-border); box-shadow: 0 8px 26px rgba(0,0,0,.045);
-    }
-    .attention-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
-    .attention-kicker { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); letter-spacing: var(--ls-wide); margin-bottom: 4px; text-transform: uppercase; }
-    .attention-title { font-size: var(--fs-xl); line-height: 1.15; letter-spacing: var(--ls-tight); font-weight: var(--fw-bold); }
-    .attention-count {
-      min-width: 34px; height: 34px; padding: 0 10px; border-radius: 999px; background: var(--text-main);
-      color: #fff; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold);
-    }
-    .attention-list { display: flex; flex-direction: column; gap: 8px; }
-    .attention-item {
-      width: 100%; border: 1px solid var(--surface-border); background: #fff; border-radius: 18px; padding: 12px;
-      display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer; transition: transform .18s ease, background .18s ease; font-family: var(--font-main);
-    }
-    .attention-item:active { transform: scale(.985); background: #f7f7f9; }
-    .attention-avatar {
-      width: 42px; height: 42px; border-radius: 50%; flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
-      font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid rgba(0,0,0,.07);
-    }
-    .attention-info { min-width: 0; flex: 1; }
-    .attention-name { font-size: var(--fs-base); font-weight: var(--fw-bold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .attention-reason { color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-medium); margin-top: 2px; }
-    .attention-action {
-      width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--surface-border);
-      background: #f7f7f9; display: flex; align-items: center; justify-content: center; flex: 0 0 auto;
-    }
 
     /* Registros (Historial) */
     .note-group { margin-bottom: 32px; }
     .note-group-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
     .note-group-title::after { content: ''; flex: 1; height: 1px; background: var(--surface-border); }
     .log-feed { display: flex; flex-direction: column; gap: 16px; }
-    .log-card { padding: 24px; border-radius: 28px; position: relative; padding-left: 20px; border-left: 3px solid rgba(0,0,0,.07); }
+    .log-card { padding: 24px; border-radius: 28px; position: relative; padding-left: 20px; border-left: 3px solid var(--text-muted); }
     .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .log-user { display: flex; align-items: center; gap: 14px; }
-    .log-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid rgba(0,0,0,0.1);}
+    .log-user { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .log-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid var(--surface-border);}
     
     .log-name-button { border: 0; background: transparent; padding: 0; font-family: inherit; color: inherit; cursor: pointer; text-align: left; }
     .log-name-button:hover { text-decoration: underline; }
@@ -440,40 +387,28 @@
     
     .log-type { display: inline-flex; font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 12px; }
     .log-text { font-size: var(--fs-base); line-height: 1.6; color: var(--text-main); font-weight: var(--fw-medium); }
-    .log-meta { background: rgba(0,0,0,0.03); border-radius: 16px; padding: 14px 16px; margin-top: 16px; font-size: var(--fs-small); color: var(--text-main); font-weight: var(--fw-medium); border: 1px solid rgba(0,0,0,0.05); }
+    .log-meta { background: var(--bg-color); border-radius: 16px; padding: 14px 16px; margin-top: 16px; font-size: var(--fs-small); color: var(--text-main); font-weight: var(--fw-medium); border: 1px solid var(--surface-border); }
     .log-meta-tag { font-size: var(--fs-micro); text-transform: uppercase; color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 4px; display: block; letter-spacing: var(--ls-wide);}
     
-    .btn-edit-log {
-      position: absolute; right: 20px; bottom: 20px; background: transparent; border: none;
-      color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
-      padding: 6px; border-radius: 10px; transition: background 0.2s, color 0.2s;
-    }
-    .btn-edit-log:hover { color: var(--text-main); background: rgba(0,0,0,0.05); }
+    .btn-edit-log { position: absolute; right: 20px; bottom: 20px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 10px; transition: background 0.2s, color 0.2s; }
+    .btn-edit-log:hover { color: var(--text-main); background: var(--bg-color); }
 
-    /* Navegación y FAB */
-    .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 6px; border-radius: 99px; display: flex; gap: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid var(--surface-border); z-index: 100; width: min(360px, calc(100% - 40px)); justify-content: space-between; transition: transform .5s var(--anim-smooth), opacity .3s ease; }
+    /* Navegación Inferior Arreglada (Stack Vertical) */
+    .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 8px 6px; border-radius: 99px; display: flex; gap: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid var(--surface-border); z-index: 100; width: min(420px, calc(100% - 24px)); justify-content: space-between; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; }
     .bottom-nav.nav-hidden { transform: translateY(150%); opacity: 0; pointer-events: none; }
-    .nav-item { flex: 1; color: var(--text-muted); background: none; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: inherit; transition: all .2s; padding: 14px 0; border-radius: 99px; }
-    .nav-item.active { color: var(--text-main); background: #FFFFFF; box-shadow: 0 2px 10px rgba(0,0,0,0.05);} 
-    .nav-label { font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+    .nav-item { flex: 1; color: var(--text-muted); background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; font-family: inherit; transition: all .2s; padding: 8px 0; border-radius: 20px; }
+    .nav-item.active { color: var(--text-main); background: var(--card-bg); box-shadow: 0 2px 10px rgba(0,0,0,0.08);} 
+    .nav-label { font-size: 9px; font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); }
 
-    .fab-add {
-      position: fixed; 
-      bottom: max(120px, calc(100px + env(safe-area-inset-bottom))); 
-      right: 24px;
-      width: auto; min-width: 60px; padding: 0 19px; height: 60px; border-radius: 999px; gap: 9px;
-      color: var(--text-main); display: flex; align-items: center; justify-content: center;
-      cursor: pointer; z-index: 200; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s;
-      background: #FFFFFF; box-shadow: 0 8px 25px rgba(0,0,0,0.15); border: 1px solid var(--surface-border);
-    }
-    .fab-add:hover { box-shadow: 0 8px 22px rgba(0,0,0,.07); }
+    .fab-add { position: fixed; bottom: max(120px, calc(100px + env(safe-area-inset-bottom))); right: 24px; width: auto; min-width: 60px; padding: 0 19px; height: 60px; border-radius: 999px; gap: 9px; color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s; background: var(--card-bg); box-shadow: 0 8px 25px rgba(0,0,0,0.2); border: 1px solid var(--surface-border); }
+    .fab-add:hover { box-shadow: 0 8px 22px rgba(0,0,0,.15); }
     .fab-add:active { transform: scale(0.92); }
 
     /* Modales y Botones */
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 400; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
-    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-radius: 40px 40px 0 0; border-top: 1px solid var(--surface-border); padding: 12px 24px max(40px, env(safe-area-inset-bottom)); z-index: 401; max-height: 90vh; overflow-y: auto; box-shadow: 0 -10px 50px rgba(0,0,0,0.1); -webkit-overflow-scrolling: touch; }
-    .sheet-handle { width: 48px; height: 6px; background: rgba(0,0,0,0.1); border-radius: 99px; margin: 6px auto 24px; }
-    .close-btn { background: #F2F2F7; border: none; padding: 8px 16px; border-radius: 99px; font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); transition: background 0.2s; position: absolute; top: 20px; right: 24px; z-index: 10;}
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 400; backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);}
+    .bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card-bg); color: var(--text-main); border-radius: 40px 40px 0 0; border-top: 1px solid var(--surface-border); padding: 12px 24px max(40px, env(safe-area-inset-bottom)); z-index: 401; max-height: 90vh; overflow-y: auto; box-shadow: 0 -10px 50px rgba(0,0,0,0.2); -webkit-overflow-scrolling: touch; }
+    .sheet-handle { width: 48px; height: 6px; background: var(--surface-border); border-radius: 99px; margin: 6px auto 24px; }
+    .close-btn { background: var(--bg-color); border: none; padding: 8px 16px; border-radius: 99px; font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-main); transition: background 0.2s; position: absolute; top: 20px; right: 24px; z-index: 10;}
 
     form { display: flex; flex-direction: column; gap: 20px; }
     .input-group { display: flex; flex-direction: column; gap: 10px; }
@@ -481,90 +416,75 @@
     .input-row > * { flex: 1; }
     label { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-left: 6px; }
     
-    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color .25s ease, background .25s ease, box-shadow .25s ease; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
-    input:focus, select:focus, textarea:focus { border-color: rgba(0,0,0,0.2); background: #FFFFFF; }
-    select option { color: var(--text-main); }
+    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    input:focus, select:focus, textarea:focus { border-color: var(--text-muted); background: var(--card-bg); }
+    select option { color: var(--text-main); background: var(--card-bg); }
     
-    .segmented-control { display: flex; background: rgba(0,0,0,0.03); border-radius: 20px; padding: 6px; margin-bottom: 8px; border: 1px solid var(--surface-border); }
+    .segmented-control { display: flex; background: var(--bg-color); border-radius: 20px; padding: 6px; margin-bottom: 8px; border: 1px solid var(--surface-border); }
     .segment-btn { flex: 1; padding: 14px; border: none; background: transparent; border-radius: 16px; font-weight: var(--fw-bold); font-family: var(--font-main); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
-    .segment-btn.active { background: #FFFFFF; color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .segment-btn.active { background: var(--card-bg); color: var(--text-main); box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
 
-    .modal-option-btn { text-align: left; padding: 20px 24px; font-size: var(--fs-base); font-family: var(--font-main); color: var(--text-main); font-weight: var(--fw-semibold); display: flex; align-items: center; border-radius: 24px; transition: all 0.2s; border: 1px solid var(--surface-border); background: #F2F2F7; cursor: pointer; }
-    .modal-option-btn.active-opt { background: #FFFFFF; color: var(--text-main); font-weight: var(--fw-bold); box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.1); }
-    .modal-option-btn:active { transform: scale(0.97); }
+    .modal-option-btn { text-align: left; padding: 20px 24px; font-size: var(--fs-base); font-family: var(--font-main); color: var(--text-main); font-weight: var(--fw-semibold); display: flex; align-items: center; border-radius: 24px; transition: all 0.2s; border: 1px solid var(--surface-border); background: var(--bg-color); cursor: pointer; }
+    .modal-option-btn.active-opt { background: var(--card-bg); color: var(--text-main); font-weight: var(--fw-bold); box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-color: var(--text-muted); }
 
-    .btn-main { background: var(--text-main); color: #FFF; border: none; border-radius: 99px; padding: 20px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.15); transition: transform 0.2s;}
+    .btn-main { background: var(--text-main); color: var(--bg-color); border: none; border-radius: 99px; padding: 20px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.15); transition: transform 0.2s;}
     .btn-main:active { transform: scale(0.96); }
     .btn-main:disabled { opacity: .6; cursor: not-allowed; transform: none; }
     
-    .btn-secondary { background: #E5E5EA; color: var(--text-main); border: none; border-radius: 99px; padding: 18px; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
+    .btn-secondary { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--surface-border); border-radius: 99px; padding: 18px; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; }
 
     /* Tarjetas de Registro Rápido */
     .quick-cards-grid { display: flex; flex-direction: column; gap: 12px; }
-    .quick-card-item {
-      background: #FFFFFF; border: 1px solid var(--surface-border); border-radius: 24px; padding: 20px;
-      display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
+    .quick-card-item { background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
     .quick-card-item:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,0,0,.06); }
-    .quick-card-item:active { transform: scale(0.98); background: #F9F9FB; }
-    .quick-card-icon {
-      width: 48px; height: 48px; border-radius: 18px; background: #F2F2F7;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
+    .quick-card-item:active { transform: scale(0.98); background: var(--bg-color); }
+    .quick-card-icon { width: 48px; height: 48px; border-radius: 18px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .quick-card-info { flex: 1; }
     .quick-card-title { font-size: var(--fs-base); font-weight: var(--fw-bold); color: var(--text-main); }
     .quick-card-sub { font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); margin-top: 2px; }
     
     /* Detalle de Contacto */
     .detail-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 28px; }
-    .btn-detail-action {
-      background: #FFFFFF; border: 1px solid var(--surface-border); border-radius: 20px; padding: 14px 12px;
-      font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
-      color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease;
-    }
-    .btn-detail-action:active { transform: scale(0.97); background: #F2F2F7; }
-    .btn-detail-danger {
-      background: transparent; color: var(--c-danger); border: none; padding: 14px;
-      font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide);
-      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 6px; opacity: 0.85; transition: opacity 0.2s;
-    }
-    .btn-detail-danger:active { opacity: 1; }
+    .btn-detail-action { background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 14px 12px; font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.03); transition: all 0.2s ease; }
+    .btn-detail-action:active { transform: scale(0.97); background: var(--bg-color); }
+    .btn-detail-danger { background: transparent; color: var(--c-danger); border: none; padding: 14px; font-size: var(--fs-micro); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 6px; opacity: 0.85; transition: opacity 0.2s; }
 
     .detail-hero { text-align: center; padding: 10px 0 30px; margin-bottom: 24px; }
-    .detail-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid rgba(0,0,0,0.05); color: var(--text-main); }
+    .detail-avatar { width: 100px; height: 100px; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 2px solid var(--surface-border); color: var(--text-main); }
     .detail-name { font-size: var(--fs-display); font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight); line-height: 1.1; margin-bottom: 10px; padding: 0 10px; word-break: break-word;}
     .detail-nickname { font-size: var(--fs-xl); color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 12px; }
     .detail-badges { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
-    .detail-badge { background: #FFFFFF; border: 1px solid var(--surface-border); padding: 10px 20px; border-radius: 99px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.03);}
+    .detail-badge { background: var(--card-bg); border: 1px solid var(--surface-border); padding: 10px 20px; border-radius: 99px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); box-shadow: 0 2px 10px rgba(0,0,0,0.03);}
 
-    .detail-card-group { background: #F8F8F8; border-radius: 28px; padding: 24px; margin-bottom: 20px; border: 1px solid var(--surface-border); }
+    .detail-card-group { background: var(--bg-color); border-radius: 28px; padding: 22px 20px; margin-bottom: 20px; border: 1px solid var(--surface-border); }
     .detail-group-title { font-size: var(--fs-micro); text-transform: uppercase; color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 16px; letter-spacing: var(--ls-wide); }
-    .detail-row { display: flex; flex-direction: column; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--surface-border); }
+    .detail-row { display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--surface-border); }
     .detail-row:last-child { border-bottom: none; padding-bottom: 0; }
     .detail-row:first-of-type { padding-top: 0; }
     .detail-label { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; gap: 6px; }
     .detail-val { font-size: var(--fs-base); font-weight: var(--fw-medium); color: var(--text-main); line-height: 1.4; word-break: break-word;}
 
-    .detail-primary-action {
-      width: 100%; border: 0; border-radius: 20px; background: var(--text-main); color: #fff; padding: 17px 18px;
-      display: flex; align-items: center; justify-content: center; gap: 9px;
-      font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small);
-      cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.12); transition: transform .18s ease; margin-top: 2px;
-    }
+    .detail-primary-action { width: 100%; border: 0; border-radius: 20px; background: var(--text-main); color: var(--bg-color); padding: 17px 18px; display: flex; align-items: center; justify-content: center; gap: 9px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; box-shadow: 0 8px 24px rgba(0,0,0,.12); transition: transform .18s ease; margin-top: 2px; }
     .detail-primary-action:active { transform: scale(.975); }
-    
     .detail-status-copy { text-align: center; margin-top: 10px; color: var(--text-muted); font-size: var(--fs-micro); font-weight: var(--fw-bold); }
-    .detail-scroll-hint { position: sticky; bottom: 8px; width: max-content; margin: 4px auto 0; padding: 7px 11px; border-radius: 999px; background: rgba(28,28,30,.08); color: var(--text-muted); font-size: var(--fs-micro); font-weight: var(--fw-bold); pointer-events: none; }
+
+    /* CHIPS DE RELACIONES Y NAVEGACIÓN EN PERFIL */
+    .rel-chips-container { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+    .rel-chip { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 20px; cursor: pointer; transition: transform 0.2s, background 0.2s; }
+    .rel-chip:active { transform: scale(0.98); background: var(--bg-color); }
+    .rel-chip-avatar { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--text-main); border: 1px solid var(--surface-border); }
+    .rel-chip-info { display: flex; flex-direction: column; flex: 1; }
+    .rel-chip-type { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); }
+    .rel-chip-name { font-size: var(--fs-base); font-weight: var(--fw-bold); color: var(--text-main); }
 
     /* Componentes Compartidos Adicionales */
     .app-footer { text-align: center; padding: 20px 0 80px; }
     
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: #fff; padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform .55s cubic-bezier(.16,1,.3,1), font-size .55s cubic-bezier(.16,1,.3,1); }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: var(--bg-color); padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 600; display: flex; flex-direction: column; overflow: hidden; }
-    .fs-header { display: flex; justify-content: space-between; align-items: center; padding: max(24px, env(safe-area-inset-top)) 24px 20px; border-bottom: 1px solid var(--surface-border); flex-shrink: 0; background: #FFFFFF; }
+    .fs-header { display: flex; justify-content: space-between; align-items: center; padding: max(24px, env(safe-area-inset-top)) 24px 20px; border-bottom: 1px solid var(--surface-border); flex-shrink: 0; background: var(--card-bg); }
     .fs-header-title { font-size: var(--fs-base); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); color: var(--text-main); }
     .fs-btn-cancel { background: transparent; border: none; color: var(--text-main); font-size: var(--fs-xl); font-weight: var(--fw-extrabold); cursor: pointer; padding: 4px 8px; line-height: 1;}
     .fs-body { flex: 1; overflow-y: auto; padding: 30px 24px 140px; -webkit-overflow-scrolling: touch; }
@@ -573,10 +493,9 @@
     .form-card-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 20px; }
 
     .avatar-preview-container { display: flex; justify-content: center; margin-bottom: -20px; position: relative; z-index: 10; transform: translateY(-20px); }
-    .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 2px solid rgba(0,0,0,0.05); box-shadow: 0 10px 20px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); color: var(--text-main); }
+    .avatar-preview { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--surface-border); box-shadow: 0 10px 20px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: var(--fs-display); font-weight: var(--fw-extrabold); color: var(--text-main); }
 
-    .btn-disclosure { background: transparent; border: 1px dashed rgba(0,0,0,0.2); color: var(--text-main); padding: 18px; border-radius: 20px; width: 100%; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-bottom: 28px; transition: background 0.2s;}
-    .btn-disclosure:active { background: rgba(0,0,0,0.05); }
+    .btn-disclosure { background: transparent; border: 1px dashed var(--surface-border); color: var(--text-main); padding: 18px; border-radius: 20px; width: 100%; font-size: var(--fs-small); font-family: var(--font-main); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; margin-bottom: 28px; transition: background 0.2s;}
 
     .feature-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 30px; }
     .feature-card { border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
@@ -585,8 +504,8 @@
     .feature-text { font-size: var(--fs-base); color: var(--text-muted); line-height: 1.5; font-weight: var(--fw-regular); }
     
     .filter-options { display: flex; flex-wrap: wrap; gap: 8px; }
-    .filter-chip { border: 1px solid var(--surface-border); background: #F2F2F7; color: var(--text-main); border-radius: 99px; padding: 10px 18px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: all .2s; }
-    .filter-chip.active { background: var(--text-main); color: #fff; border-color: var(--text-main); }
+    .filter-chip { border: 1px solid var(--surface-border); background: var(--bg-color); color: var(--text-main); border-radius: 99px; padding: 10px 18px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); cursor: pointer; transition: all .2s; }
+    .filter-chip.active { background: var(--text-main); color: var(--bg-color); border-color: var(--text-main); }
 
     .sheet-section-title { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-bottom: 12px; }
     .sheet-danger-title { font-size: var(--fs-2xl); font-weight: var(--fw-extrabold); text-transform: uppercase; margin-bottom: 16px; letter-spacing: var(--ls-tight); }
@@ -594,66 +513,77 @@
     .quicklog-title { font-size: var(--fs-xl); font-weight: var(--fw-bold); margin-bottom: 2px; }
     .quicklog-subtitle { font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-bold); text-transform: uppercase; letter-spacing: var(--ls-wide); }
 
-    /* Estilos mejorados para el Modal Acerca De */
-    .about-header {
-      text-align: center;
-      padding: 10px 10px 24px;
-    }
-    .about-subtitle {
-      color: var(--text-muted);
-      font-size: var(--fs-small);
-      font-weight: var(--fw-bold);
-      letter-spacing: var(--ls-wide);
-      margin-top: 6px;
-      text-transform: uppercase;
-    }
+    .about-header { text-align: center; padding: 10px 10px 24px; }
+    .about-subtitle { color: var(--text-muted); font-size: var(--fs-small); font-weight: var(--fw-bold); letter-spacing: var(--ls-wide); margin-top: 6px; text-transform: uppercase; }
 
-    .feature-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 4px;
-    }
-    .feature-icon-badge {
-      width: 36px;
-      height: 36px;
-      border-radius: 12px;
-      background: var(--bg-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--surface-border);
-    }
-    .feature-card-highlight {
-      border: 1px solid rgba(28, 28, 30, 0.2);
-      background: linear-gradient(135deg, #FFFFFF 0%, #F9F9FB 100%);
-    }
+    .feature-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+    .feature-icon-badge { width: 36px; height: 36px; border-radius: 12px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; border: 1px solid var(--surface-border); }
 
-    /* Media Queries */
-    @media (max-width:500px) {
-      .main-app-content { padding-left:14px; padding-right:14px; }
+    /* Nuevas vistas: red social, balance, bóveda y fondo ambiental */
+    .ambient-orbs { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; opacity: .42; }
+    .ambient-orb { position: absolute; width: 260px; height: 260px; border-radius: 50%; filter: blur(80px); will-change: transform; animation: orb-drift 28s ease-in-out infinite alternate; }
+    .ambient-orb.one { background: rgba(120, 105, 255, 0.22); top: 8%; left: -110px; }
+    .ambient-orb.two { background: rgba(255, 130, 150, 0.18); top: 48%; right: -140px; animation-delay: -9s; }
+    .ambient-orb.three { background: rgba(70, 190, 160, 0.14); bottom: -120px; left: 20%; animation-delay: -17s; }
+    @keyframes orb-drift { from { transform: translate3d(0, -20px, 0) scale(.9); } to { transform: translate3d(45px, 35px, 0) scale(1.12); } }
+    
+    .app-container, .main-app-content, header, .bottom-nav, .fab-add { isolation: isolate; }
+    .main-app-content { position: relative; z-index: 1; }
+    
+    .new-view { min-height: 55vh; }
+    .view-intro { margin: 8px 0 26px; }
+    .view-intro p { color: var(--text-muted); margin-top: 10px; font-size: var(--fs-small); }
+    .insight-card { padding: 22px; border-radius: 26px; margin-bottom: 16px; background: var(--card-bg); border: 1px solid var(--surface-border); }
+    .insight-card h3 { font-size: var(--fs-base); margin-bottom: 8px; }
+    .insight-card p, .muted-copy { font-size: var(--fs-small); color: var(--text-muted); }
+    .graph-stage { height: 390px; border-radius: 24px; overflow: hidden; background: var(--card-bg); border: 1px solid var(--surface-border); }
+    #socialGraph { width: 100%; height: 100%; }
+    .graph-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .graph-legend span { border: 1px solid var(--surface-border); border-radius: 99px; padding: 6px 10px; font-size: 11px; color: var(--text-muted); }
+    
+    .vault-field { margin-top: 14px; }
+    .vault-field label { display: block; margin-bottom: 8px; font-size: var(--fs-micro); font-weight: var(--fw-bold); text-transform: uppercase; color: var(--text-muted); }
+    .vault-field input, .vault-field textarea { padding: 13px 15px; border-radius: 15px; width: 100%; background: var(--input-bg); color: var(--text-main); border: 1px solid var(--surface-border); font-family: inherit;}
+    .vault-save { border: 0; border-radius: 99px; padding: 13px 18px; background: var(--text-main); color: var(--bg-color); font-weight: 800; font-family: inherit; margin-top: 14px; cursor: pointer; transition: transform 0.2s;}
+    .vault-save:active { transform: scale(0.97); }
+
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0; }
+    .metric-tile { padding: 18px; border-radius: 22px; background: var(--card-bg); border: 1px solid var(--surface-border); }
+    .metric-number { font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
+    .metric-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; margin-top: 4px;}
+    .chart-wrap { height: 240px; position: relative; margin-top: 14px;}
+    
+    .lock-screen { position: fixed; inset: 0; z-index: 2000; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; padding: 28px; }
+    .lock-inner { width: 100%; max-width: 360px; text-align: center; }
+    .lock-inner h2 { font-size: 30px; margin: 18px 0 8px; }
+    .lock-inner p { color: #aaa; font-size: 13px; line-height: 1.6; margin-bottom: 22px; }
+    .lock-inner button { width: 100%; border: 1px solid #333; border-radius: 99px; padding: 15px; background: #fff; color: #000; font-weight: 800; font-family: inherit; margin-top: 10px; cursor: pointer;}
+    .lock-inner button.secondary { background: #111; color: #fff; }
+
+    @media (max-width: 500px) {
+      .main-app-content { padding-left: 14px; padding-right: 14px; }
       .card-title { font-size: var(--fs-xl); }
-      .wallet-card { padding: 23px 20px; }
-      .attention-section { padding: 17px; }
+      .wallet-card { padding: 22px 18px; }
       .detail-name { font-size: var(--fs-2xl); }
       .bottom-nav { bottom: max(18px, env(safe-area-inset-bottom)); }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; }
+      .ambient-orb { animation: none !important; }
     }
-
   </style>
 </head>
 
 <body x-data="appData" @scroll.window="handleScroll" x-init="initApp">
 
 <div class="app-container" x-cloak>
+  <div class="ambient-orbs" aria-hidden="true"><div class="ambient-orb one"></div><div class="ambient-orb two"></div><div class="ambient-orb three"></div></div>
   
-  <header :class="{ 'header-compact': headerScrolled }" :style="{ '--header-progress': headerScrollProgress, '--header-height-reduction': headerHeightReduction + 'px', '--header-bg-alpha': headerBgAlpha, '--header-blur': headerBlur + 'px', '--header-shadow-alpha': headerShadowAlpha, '--header-translate': headerTranslate + 'px', opacity: 1, pointerEvents: 'auto' }">
+  <header :class="{ 'header-compact': headerScrolled }" :style="{ opacity: 1, pointerEvents: 'auto' }">
     <h1 class="brand-wordmark">souvlaki</h1>
     <button class="btn-about-header" aria-label="Acerca de Souvlaki" @click="modals.about = true" x-show="!isNavHidden">
-      <i data-lucide="info" style="width: 18px; height: 18px; color: var(--text-muted);"></i>
+      <i data-lucide="info" style="width: 18px; height: 18px;"></i>
     </button>
   </header>
 
@@ -661,7 +591,7 @@
     
     <main x-show="currentView === 'home'" x-transition.opacity.duration.300ms>
       
-      <!-- BIRTHDAY RADAR WIDGET -->
+      <!-- RADAR DE CUMPLEAÑOS CERCANOS -->
       <div class="birthday-radar" x-show="upcomingBirthdays.length > 0">
         <div class="radar-title">
           <i data-lucide="cake" style="width: 16px; height: 16px; color: var(--c-danger);"></i>
@@ -683,6 +613,7 @@
         </div>
       </div>
 
+      <!-- BÚSQUEDA Y FILTROS -->
       <div class="search-container">
         <div class="search-wrapper">
           <i data-lucide="search" class="search-icon" style="width:18px;height:18px;"></i>
@@ -708,7 +639,7 @@
         </button>
       </div>
     
-      <!-- PRIMARY CONTACT CARDS -->
+      <!-- TARJETAS PRINCIPALES DE CONTACTOS -->
       <div class="primary-list">
         
         <template x-if="!isLoading && primaryContacts.length === 0 && secondaryContacts.length === 0 && searchQuery === ''">
@@ -741,6 +672,8 @@
               <div class="swipe-background swipe-bg-delete" :id="'bg-del-' + contact.id">
                 <span>ELIMINAR</span>
               </div>
+              
+              <!-- Color dinámico de la tarjeta restaurado -->
               <div class="wallet-card" :class="getColorHash(contact.nombre || String(contact.id))">
                 <div class="card-header">
                   <div class="card-title">
@@ -755,10 +688,30 @@
                     <div class="pill" x-text="contact.circulo || 'GENERAL'"></div>
                     <template x-if="contact.trabajo"><div class="pill" x-text="contact.trabajo"></div></template>
                   </div>
+                  
                   <div class="card-secondary">
                     <i data-lucide="clock"></i>
                     <span x-text="contact._lastInteractionTs ? 'Último contacto: ' + contact._lastInteractionText.toLowerCase() : 'Todavía no hay interacciones'"></span>
                   </div>
+
+                  <template x-if="contact.relaciones && contact.relaciones.length > 0">
+                    <div class="avatar-stack-wrapper">
+                      <span class="avatar-stack-title">VÍNCULOS:</span>
+                      <div class="avatar-stack">
+                        <template x-for="(rel, rIdx) in contact.relaciones.slice(0, 3)" :key="rIdx">
+                          <div class="avatar-stack-item" :title="getContactName(rel.contactoId)" @click.stop="openDetail(rel.contactoId)">
+                            <span x-text="getInitialsFromId(rel.contactoId)"></span>
+                          </div>
+                        </template>
+                        <template x-if="contact.relaciones.length > 3">
+                          <div class="avatar-stack-item avatar-stack-more">
+                            <span x-text="'+' + (contact.relaciones.length - 3)"></span>
+                          </div>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+
                   <template x-if="contact._health && contact._health.class !== 'hidden'">
                     <div class="card-health-copy" x-text="healthExplanation(contact)"></div>
                   </template>
@@ -769,6 +722,7 @@
         </template>
       </div>
 
+      <!-- TARJETERO SECUNDARIO -->
       <template x-if="secondaryContacts.length > 0">
         <div class="stocard-deck">
           <div class="stocard-header" @click="stocardExpanded = !stocardExpanded">
@@ -818,10 +772,11 @@
       <div class="app-footer"></div>
     </main>
 
+    <!-- VISTA DE REGISTRO / NUEVA NOTA O ACTIVIDAD -->
     <main x-show="currentView === 'log'" x-cloak x-transition.opacity.duration.300ms>
       <div style="margin: 10px 0 30px;">
         <h2 class="page-title" x-text="editingNoteId ? 'EDITAR NOTA' : 'REGISTRO'"></h2>
-        <p class="page-subtitle" x-text="editingNoteId ? 'ACTUALIZÁ LA INFORMACIÓN DE ESTA ENTRADA.' : 'Guardá una charla o plan.'"></p>
+        <p class="page-subtitle" x-text="editingNoteId ? 'ACTUALIZÁ LA INFORMACIÓN DE ESTA ENTRADA.' : 'Guardá una charla, salida o plan con 1 o más personas.'"></p>
       </div>
       
       <form @submit.prevent="saveNote">
@@ -831,15 +786,23 @@
         </div>
         
         <div class="input-group">
-          <label>CONTACTO</label>
+          <label>CONTACTO(S) INVOLUCRADO(S) *</label>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;" x-show="newNote.contactosIds && newNote.contactosIds.length > 0">
+            <template x-for="cId in newNote.contactosIds" :key="cId">
+              <button type="button" class="active-filter-chip" style="background: var(--text-main); color: var(--bg-color);" @click="toggleNoteContact(cId)">
+                <span x-text="getContactName(cId)" style="color: var(--bg-color);"></span> ×
+              </button>
+            </template>
+          </div>
           <div class="search-wrapper">
-            <select x-model="newNote.contactoId" required class="glass-panel" style="padding-left: 18px;">
-              <option value="">Seleccionar...</option>
+            <select @change="addContactToNote($event.target.value); $event.target.value='';" class="glass-panel" style="padding-left: 18px;">
+              <option value="">+ Seleccionar persona...</option>
               <template x-for="c in contactsListAlphabetic" :key="c.id">
                 <option :value="c.id" x-text="formatName(c.nombre, c.apellido)"></option>
               </template>
             </select>
           </div>
+          <span style="font-size: var(--fs-micro); color: var(--text-muted); margin-left: 6px;">Podés agregar varias personas si fue un plan compartido.</span>
         </div>
         
         <div class="input-group">
@@ -848,11 +811,11 @@
         </div>
         <div class="input-group">
           <label x-text="newNote.tipo === 'conversacion' ? '¿QUÉ HABLARON?' : '¿QUÉ HICIERON?'"></label>
-          <textarea x-model="newNote.detalle" rows="4" required class="glass-panel" autocapitalize="sentences"></textarea>
+          <textarea x-model="newNote.detalle" rows="4" required class="glass-panel" autocapitalize="sentences" placeholder="Ej: Fuimos a cenar, hablamos sobre el trabajo..."></textarea>
         </div>
         <div class="input-group">
           <label>SEGUIMIENTO / CONTEXTO (OPCIONAL)</label>
-          <input type="text" x-model="newNote.nota" placeholder="Ej: acordamos vernos el viernes" class="glass-panel" autocapitalize="sentences" style="padding-left: 18px;">
+          <input type="text" x-model="newNote.nota" placeholder="Ej: Acordamos vernos el próximo viernes" class="glass-panel" autocapitalize="sentences" style="padding-left: 18px;">
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 10px;">
@@ -860,14 +823,14 @@
             <button type="button" class="btn-secondary" @click="resetNoteForm()" style="flex: 1;">CANCELAR</button>
           </template>
           <button type="submit" class="btn-main" :disabled="isSavingNote" style="flex: 2;">
-            <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
+            <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: var(--bg-color);"></i>
             <span x-text="isSavingNote ? 'GUARDANDO...' : (editingNoteId ? 'ACTUALIZAR' : 'GUARDAR')"></span>
           </button>
         </div>
       </form>
 
       <div style="margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--surface-border);">
-        <h2 class="section-title">HISTORIAL</h2>
+        <h2 class="section-title">HISTORIAL GENERAL</h2>
         <div class="filter-options" style="margin: 20px 0;">
           <button class="filter-chip" :class="{ 'active': noteFilter === 'Todos' }" @click="noteFilter = 'Todos'">TODOS</button>
           <template x-for="circulo in uniqueCircles" :key="circulo">
@@ -881,7 +844,7 @@
           <div class="empty-state">
             <div class="empty-state-icon"><i data-lucide="notebook-pen" style="width:24px;height:24px;"></i></div>
             <div class="empty-state-title">Todavía no hay recuerdos.</div>
-            <p class="empty-state-help">Cuando hables, salgas o llames a alguien, registralo acá para que la historia de ese vínculo quede guardada.</p>
+            <p class="empty-state-help">Registra salidas o charlas para que la historia del vínculo quede guardada.</p>
             <button class="empty-state-action" @click="currentView = 'home'; window.scrollTo(0,0)">Ver agenda</button>
           </div>
         </template>
@@ -892,26 +855,21 @@
             <div style="display:flex; flex-direction:column; gap:20px;">
               <template x-for="n in notesArray" :key="n.id">
                 <div class="log-card glass-panel">
-                  <button class="btn-edit-log" aria-label="Editar registro" title="Editar registro" @click="editNote(n)">
-                    <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
-                  </button>
+                  <button class="btn-edit-log" @click="editNote(n)"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i></button>
                   <div class="log-header">
                     <div class="log-user">
-                      <div class="log-avatar" :class="getColorHash(getContactRawName(n.contactoId))"><span x-text="getInitialsFromId(n.contactoId)"></span></div>
-                      <button class="log-name-button log-name" @click="openDetail(parseInt(n.contactoId))" x-text="getContactName(n.contactoId)" aria-label="Abrir contacto"></button>
+                      <template x-for="cId in (n.contactosIds && n.contactosIds.length > 0 ? n.contactosIds : [n.contactoId])" :key="'usr-'+cId">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-right: 8px;">
+                          <div class="log-avatar" :class="getColorHash(getContactRawName(cId))"><span x-text="getInitialsFromId(cId)"></span></div>
+                          <button class="log-name-button log-name" @click="openDetail(parseInt(cId))" x-text="getContactName(cId)"></button>
+                        </div>
+                      </template>
                     </div>
                     <span class="log-date" x-text="formatDateFriendly(n.fecha)"></span>
                   </div>
-                  <div class="log-type">
-                    <span x-text="n.tipo === 'conversacion' ? 'CONVERSACIÓN' : 'ACTIVIDAD'"></span>
-                  </div>
+                  <div class="log-type"><span x-text="n.tipo === 'conversacion' ? 'CONVERSACIÓN' : 'ACTIVIDAD'"></span></div>
                   <div class="log-text" x-text="n.detalle"></div>
-                  <template x-if="n.nota">
-                    <div class="log-meta">
-                      <span class="log-meta-tag">NOTA DE SEGUIMIENTO</span>
-                      <div x-text="n.nota"></div>
-                    </div>
-                  </template>
+                  <template x-if="n.nota"><div class="log-meta"><span class="log-meta-tag">NOTA DE SEGUIMIENTO</span><div x-text="n.nota"></div></div></template>
                 </div>
               </template>
             </div>
@@ -919,27 +877,57 @@
         </template>
       </div>
     </main>
+
+    <!-- VISTA RED SOCIAL -->
+    <main class="new-view" x-show="currentView === 'network'" x-cloak x-transition.opacity>
+      <div class="view-intro"><h2 class="page-title">TU RED</h2><p>Una mirada a los vínculos que conectan tus círculos. Tocá un nodo para abrir su ficha.</p></div>
+      <div class="insight-card glass-panel">
+        <h3>Mapa de relaciones</h3>
+        <p>Las líneas representan relaciones que registraste en las fichas. Los colores agrupan por círculo.</p>
+        <div class="graph-stage"><div id="socialGraph" role="img" aria-label="Grafo interactivo de contactos"></div></div>
+        <div class="graph-legend"><span x-text="contacts.length + ' personas'"></span><span x-text="graphEdgesCount() + ' vínculos registrados'"></span></div>
+        <button class="vault-save" style="width:100%" @click="renderSocialGraph()">Centrar mapa</button>
+      </div>
+    </main>
+
+    <!-- VISTA BALANCE SOCIAL -->
+    <main class="new-view" x-show="currentView === 'balance'" x-cloak x-transition.opacity>
+      <div class="view-intro"><h2 class="page-title">BALANCE SOCIAL</h2><p>Una lectura amable de cómo estás compartiendo tu tiempo.</p></div>
+      <div class="metric-grid">
+        <div class="metric-tile glass-panel"><div class="metric-number" x-text="monthNotes().length"></div><div class="metric-label">Interacciones este mes</div></div>
+        <div class="metric-tile glass-panel"><div class="metric-number" x-text="inPersonCount()"></div><div class="metric-label">Encuentros presenciales*</div></div>
+      </div>
+      <div class="insight-card glass-panel"><h3>Atención por círculo</h3><div class="chart-wrap"><canvas id="circleChart"></canvas></div></div>
+      <div class="insight-card glass-panel"><h3>Cómo te comunicaste</h3><div class="chart-wrap"><canvas id="interactionChart"></canvas></div></div>
+      <p class="muted-copy">*Las métricas dependen de los registros que hayas guardado.</p>
+    </main>
   </div>
 
+  <!-- NAVEGACIÓN INFERIOR (Arreglada para que no se superpongan) -->
   <nav class="bottom-nav" :class="{ 'nav-hidden': isNavHidden }">
     <button class="nav-item" :class="{ 'active': currentView === 'home' }" @click="currentView = 'home'; window.scrollTo(0,0);">
-      <i data-lucide="users" style="width: 18px; height: 18px;"></i>
-      <span class="nav-label">AGENDA</span>
+      <i data-lucide="users" style="width: 18px; height: 18px;"></i><span class="nav-label">AGENDA</span>
     </button>
     <button class="nav-item" :class="{ 'active': currentView === 'log' }" @click="currentView = 'log'; window.scrollTo(0,0);">
-      <i data-lucide="notebook-pen" style="width: 18px; height: 18px;"></i>
-      <span class="nav-label">REGISTRO</span>
+      <i data-lucide="notebook-pen" style="width: 18px; height: 18px;"></i><span class="nav-label">REGISTRO</span>
+    </button>
+    <button class="nav-item" :class="{ 'active': currentView === 'network' }" @click="currentView = 'network'; window.scrollTo(0,0); setTimeout(() => renderSocialGraph(), 350)">
+      <i data-lucide="network" style="width:18px;height:18px"></i><span class="nav-label">RED</span>
+    </button>
+    <button class="nav-item" :class="{ 'active': currentView === 'balance' }" @click="currentView = 'balance'; window.scrollTo(0,0); setTimeout(() => renderBalanceCharts(), 350)">
+      <i data-lucide="chart-no-axes-combined" style="width:18px;height:18px"></i><span class="nav-label">BALANCE</span>
     </button>
   </nav>
 
+  <!-- BOTÓN FLOTANTE NUEVO CONTACTO -->
   <button class="fab-add" x-show="currentView === 'home' && !isNavHidden" x-transition.scale.origin.bottom aria-label="Agregar contacto" @click="openNewContactModal()">
     <i data-lucide="plus" style="width:21px;height:21px;color:var(--text-main);"></i>
   </button>
 
+  <!-- MODALES DE FILTRO Y QUICKLOG (Mantenidos ocultos para acortar si es necesario, pero intactos) -->
   <div class="modal-overlay" x-show="modals.sortFilter" x-cloak x-transition.opacity @click="modals.sortFilter = false"></div>
   <div class="bottom-sheet" x-show="modals.sortFilter" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500;">
     <div class="sheet-handle"></div>
-    
     <div style="margin-bottom: 24px;">
       <h2 class="sheet-section-title">FILTRAR POR CÍRCULO</h2>
       <div class="filter-options">
@@ -949,28 +937,20 @@
         </template>
       </div>
     </div>
-
     <div>
       <h2 class="sheet-section-title">ORDENAR AGENDA</h2>
       <div style="display: flex; flex-direction: column; gap: 12px;">
-        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'alfabetico'}" @click="sortMode = 'alfabetico'; modals.sortFilter = false;">
-          ALFABÉTICO
-        </button>
-        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'reciente'}" @click="sortMode = 'reciente'; modals.sortFilter = false;">
-          INTERACCIÓN RECIENTE
-        </button>
-        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'atencion'}" @click="sortMode = 'atencion'; modals.sortFilter = false;">
-          NECESITAN ATENCIÓN
-        </button>
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'alfabetico'}" @click="sortMode = 'alfabetico'; modals.sortFilter = false;">ALFABÉTICO</button>
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'reciente'}" @click="sortMode = 'reciente'; modals.sortFilter = false;">INTERACCIÓN RECIENTE</button>
+        <button class="modal-option-btn" :class="{'active-opt': sortMode === 'atencion'}" @click="sortMode = 'atencion'; modals.sortFilter = false;">NECESITAN ATENCIÓN</button>
       </div>
     </div>
   </div>
 
-  <!-- REGISTRO RÁPIDO CON TARJETAS Y SEGUIMIENTO -->
   <div class="modal-overlay" x-show="modals.quickLog" x-cloak x-transition.opacity @click="closeQuickLogModal"></div>
   <div class="bottom-sheet" x-show="modals.quickLog" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500;">
     <div class="sheet-handle"></div>
-    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px;">
       <div class="log-avatar" :class="getColorHash(activeQuickLogContact?.nombre || 'X')" style="width: 48px; height: 48px; font-size: var(--fs-base);">
         <span x-text="getInitials(activeQuickLogContact?.nombre, activeQuickLogContact?.apellido)"></span>
       </div>
@@ -979,211 +959,133 @@
         <div class="quicklog-subtitle">REGISTRO RÁPIDO</div>
       </div>
     </div>
-    
-    <!-- PASO 1: SELECCIÓN DE TARJETA -->
+    <div style="margin-bottom: 18px; padding: 12px 14px; background: var(--bg-color); border-radius: 20px; border: 1px solid var(--surface-border);">
+      <div style="font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">OTRAS PERSONAS EN ESTA ACTIVIDAD:</div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; max-height: 90px; overflow-y: auto;">
+        <template x-for="c in contactsListAlphabetic.filter(x => x.id !== activeQuickLogContact?.id)" :key="'ql-' + c.id">
+          <button type="button" class="active-filter-chip" :style="quickLogContactosIds.includes(c.id) ? 'background: var(--text-main); color: var(--bg-color); border-color: var(--text-main);' : ''" @click="toggleQuickLogContact(c.id)">
+            <span x-text="formatName(c.nombre, c.apellido)" :style="quickLogContactosIds.includes(c.id) ? 'color: var(--bg-color);' : ''"></span>
+          </button>
+        </template>
+      </div>
+    </div>
     <template x-if="quickLogStep === 1">
       <div class="quick-cards-grid">
         <div class="quick-card-item" @click="selectQuickOption('Conversación por mensajes', 'conversacion')">
-          <div class="quick-card-icon">
-            <i data-lucide="message-square-more" style="width: 22px; height: 22px; color: var(--text-main);"></i>
-          </div>
-          <div class="quick-card-info">
-            <div class="quick-card-title">Conversación por mensajes</div>
-            <div class="quick-card-sub">Chats, WhatsApp o SMS</div>
-          </div>
+          <div class="quick-card-icon"><i data-lucide="message-square-more" style="width: 22px; height: 22px; color: var(--text-main);"></i></div>
+          <div class="quick-card-info"><div class="quick-card-title">Conversación por mensajes</div><div class="quick-card-sub">Chats, WhatsApp o SMS</div></div>
         </div>
-
-        <div class="quick-card-item" @click="selectQuickOption('Llamada telefónica', 'conversacion')">
-          <div class="quick-card-icon">
-            <i data-lucide="phone-call" style="width: 22px; height: 22px; color: var(--text-main);"></i>
-          </div>
-          <div class="quick-card-info">
-            <div class="quick-card-title">Llamada telefónica</div>
-            <div class="quick-card-sub">Llamada de voz o videollamada</div>
-          </div>
-        </div>
-
         <div class="quick-card-item" @click="selectQuickOption('Encuentro en persona', 'actividad')">
-          <div class="quick-card-icon">
-            <i data-lucide="user-check" style="width: 22px; height: 22px; color: var(--text-main);"></i>
-          </div>
-          <div class="quick-card-info">
-            <div class="quick-card-title">Encuentro en persona</div>
-            <div class="quick-card-sub">Salida, café o reunión presencial</div>
-          </div>
+          <div class="quick-card-icon"><i data-lucide="user-check" style="width: 22px; height: 22px; color: var(--text-main);"></i></div>
+          <div class="quick-card-info"><div class="quick-card-title">Encuentro en persona</div><div class="quick-card-sub">Salida, café o reunión presencial</div></div>
         </div>
-
         <button class="modal-option-btn" style="justify-content: center; background: transparent; border: none; margin-top: 6px; color: var(--text-muted); box-shadow: none; gap: 8px;" @click="quickLogFullEditor(activeQuickLogContact?.id)">
-          <i data-lucide="square-pen" style="width: 16px; height: 16px;"></i>
-          <span>Escribir detalladamente</span>
+          <i data-lucide="square-pen" style="width: 16px; height: 16px;"></i><span>Escribir detalladamente</span>
         </button>
       </div>
     </template>
-
-    <!-- PASO 2: SEGUIMIENTO/CONTEXTO OPCIONAL -->
     <template x-if="quickLogStep === 2">
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div class="input-group">
           <label>SEGUIMIENTO / CONTEXTO (OPCIONAL)</label>
           <input type="text" x-model="quickLogNote" placeholder="EJ: Quedamos en hablar la semana que viene..." class="glass-panel" autocapitalize="sentences" autofocus @keyup.enter="confirmQuickLog()" style="padding-left: 18px;">
         </div>
-        
-        <button class="btn-main" @click="confirmQuickLog()">
-          <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
-          <span>GUARDAR REGISTRO</span>
-        </button>
-        <button class="btn-secondary" @click="quickLogStep = 1">
-          VOLVER
-        </button>
+        <button class="btn-main" @click="confirmQuickLog()"><i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: var(--bg-color);"></i><span>GUARDAR REGISTRO</span></button>
+        <button class="btn-secondary" @click="quickLogStep = 1">VOLVER</button>
       </div>
     </template>
   </div>
 
-  <!-- MODAL ACERCA DE SOUVLAKI -->
+  <!-- MODAL ACERCA DE Y WEBAUTHN / TEMA -->
   <div class="modal-overlay" x-show="modals.about" x-cloak x-transition.opacity @click="modals.about = false"></div>
   <div class="bottom-sheet" x-show="modals.about" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 600;">
     <div class="sheet-handle"></div>
     <button type="button" class="close-btn" @click="modals.about = false">x</button>
     
     <div class="about-header">
-      <h2 class="brand-wordmark" style="margin-bottom: 4px; transform: none; pointer-events: none;">souvlaki</h2>
-      <p class="about-subtitle">LA AGENDA HUMANA PARA CUIDAR A QUIENES IMPORTAN</p>
-    </div>
-
-    <div class="feature-grid">
-      <!-- 01 · Ritmo y Frecuencia -->
-      <div class="feature-card glass-panel feature-card-highlight">
-        <div class="feature-card-header">
-          <span class="feature-num">01</span>
-          <div class="feature-icon-badge">
-            <i data-lucide="clock" style="width: 18px; height: 18px; color: var(--text-main);"></i>
-          </div>
-        </div>
-        <h3 class="feature-title">Tu ritmo de conexión</h3>
-        <p class="feature-text">Define qué tan seguido quieres saber de cada persona. Souvlaki compara el tiempo desde tu última charla y te avisa cuando es momento de volver a hablar.</p>
+      <h2 class="brand-wordmark" style="margin-bottom: 4px;">souvlaki</h2>
+      <p class="about-subtitle">LA AGENDA HUMANA</p>
+      
+      <div class="insight-card glass-panel" style="text-align:left;margin-top:20px">
+        <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold);">Privacidad y bloqueo</h3>
+        <p>Souvlaki ahora admite WebAuthn para bloquear la interfaz usando la huella o FaceID de este dispositivo.</p>
+        <button class="vault-save" style="width:100%" @click="registerPasskey()">Configurar biometría</button>
+        <button class="vault-save" style="width:100%;background:var(--bg-color);color:var(--text-main);border:1px solid var(--surface-border)" @click="lockEnabled = !lockEnabled; unlocked = !lockEnabled; localStorage.setItem('souvlaki_lock_enabled', String(lockEnabled)); lockMessage = ''" x-text="lockEnabled ? 'Desactivar bloqueo' : 'Activar bloqueo'"></button>
       </div>
 
-      <!-- 02 · Memoria Detallada -->
-      <div class="feature-card glass-panel">
-        <div class="feature-card-header">
-          <span class="feature-num">02</span>
-          <div class="feature-icon-badge">
-            <i data-lucide="heart-handshake" style="width: 18px; height: 18px; color: var(--text-main);"></i>
-          </div>
+      <div class="feature-card glass-panel" style="border: 1px solid var(--text-muted); text-align: left;">
+        <h3 class="feature-title" style="font-size: var(--fs-lg); margin-bottom: 6px;">Personalización y Respaldo</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--surface-border);">
+          <span style="font-size: var(--fs-small); font-weight: var(--fw-bold);">TEMA VISUAL</span>
+          <select x-model="userTheme" @change="setTheme(userTheme)" style="width: auto; padding: 8px 14px; font-size: var(--fs-micro);">
+            <option value="system">AUTOMÁTICO</option>
+            <option value="dark">MODO OSCURO</option>
+            <option value="light">MODO CLARO</option>
+          </select>
         </div>
-        <h3 class="feature-title">Más allá de los nombres</h3>
-        <p class="feature-text">Registra conversaciones, actividades compartidas y detalles importantes. No dejes que la memoria te falle en lo que de verdad le importa a tus seres queridos.</p>
-      </div>
-
-      <!-- 03 · Filosofía Ética -->
-      <div class="feature-card glass-panel">
-        <div class="feature-card-header">
-          <span class="feature-num">03</span>
-          <div class="feature-icon-badge">
-            <i data-lucide="sparkles" style="width: 18px; height: 18px; color: var(--text-main);"></i>
-          </div>
+        <div style="display: flex; gap: 10px; margin-top: 16px;">
+          <button type="button" class="btn-detail-action" style="flex: 1;" @click="exportData()"><i data-lucide="download" style="width: 15px; height: 15px;"></i><span>EXPORTAR</span></button>
+          <label class="btn-detail-action" style="flex: 1; margin: 0; cursor: pointer;"><i data-lucide="upload" style="width: 15px; height: 15px;"></i><span>IMPORTAR</span><input type="file" accept=".json" @change="importData($event)" style="display: none;"></label>
         </div>
-        <h3 class="feature-title">Un espacio íntimo, no comercial</h3>
-        <p class="feature-text">Diseñado para ser una libreta personal y libre de distracciones. Sin métricas corporativas, embudos de venta ni tratar a tus relaciones como si fueran clientes.</p>
-      </div>
-
-      <!-- 04 · Privacidad -->
-      <div class="feature-card glass-panel">
-        <div class="feature-card-header">
-          <span class="feature-num">04</span>
-          <div class="feature-icon-badge">
-            <i data-lucide="shield-check" style="width: 18px; height: 18px; color: var(--text-main);"></i>
-          </div>
-        </div>
-        <h3 class="feature-title">Tus datos son tuyos</h3>
-        <p class="feature-text">Tus datos se guardan localmente en este dispositivo mediante IndexedDB. Souvlaki no los envía a servicios externos.</p>
       </div>
     </div>
   </div>
 
   <!-- CREAR O EDITAR CONTACTO -->
   <div class="fs-modal" x-show="modals.nuevo" x-cloak x-transition:enter="transition ease-out duration-400" x-transition:enter-start="transform translate-y-full opacity-0" x-transition:enter-end="transform translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-300" x-transition:leave-start="transform translate-y-0 opacity-100" x-transition:leave-end="transform translate-y-full opacity-0">
-    
     <div class="fs-header">
       <div class="fs-header-title" x-text="editingContactId ? 'EDITAR CONTACTO' : 'NUEVO CONTACTO'"></div>
       <button class="fs-btn-cancel" @click="closeNewContactModal">×</button>
     </div>
-
     <div class="fs-body">
       <form id="form-nuevo-contacto" @submit.prevent="saveContact">
-        
         <div class="avatar-preview-container">
           <div class="avatar-preview glass-panel" :class="getColorHash(newContact.nombre || 'Nuevo')">
             <span x-text="getInitials(newContact.nombre || 'N', newContact.apellido)"></span>
           </div>
         </div>
-
         <div class="form-card glass-panel">
           <div class="form-card-title">IDENTIDAD</div>
-          <div class="input-group">
-            <label>NOMBRE *</label>
-            <input type="text" x-model="newContact.nombre" autocapitalize="words" required placeholder="EJ: MARTÍN" style="padding-left: 18px;">
-          </div>
+          <div class="input-group"><label>NOMBRE *</label><input type="text" x-model="newContact.nombre" autocapitalize="words" required style="padding-left: 18px;"></div>
           <div class="input-row" style="margin-top: 16px;">
-            <div class="input-group"><label>APELLIDO</label><input type="text" x-model="newContact.apellido" autocapitalize="words" placeholder="OPCIONAL" style="padding-left: 18px;"></div>
-            <div class="input-group"><label>APODO</label><input type="text" x-model="newContact.apodo" autocapitalize="words" placeholder="EJ: TINCHO" style="padding-left: 18px;"></div>
+            <div class="input-group"><label>APELLIDO</label><input type="text" x-model="newContact.apellido" autocapitalize="words" style="padding-left: 18px;"></div>
+            <div class="input-group"><label>APODO</label><input type="text" x-model="newContact.apodo" autocapitalize="words" style="padding-left: 18px;"></div>
           </div>
         </div>
-
-        <button type="button" class="btn-disclosure" x-show="!showAdvancedContactFields" @click="showAdvancedContactFields = true">
-          <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-          <span>AÑADIR MÁS DETALLES</span>
-        </button>
-
-        <div x-show="showAdvancedContactFields" x-transition.opacity>
-          <div class="form-card glass-panel">
-            <div class="form-card-title">EL VÍNCULO</div>
-            <div class="input-group">
-              <label>CÍRCULO SOCIAL</label>
-              <select x-model="newContact.circulo" style="padding-left: 18px;">
-                <option>AMIGOS</option><option>FAMILIA</option><option>TRABAJO</option><option>CONOCIDOS</option>
-              </select>
+        <div class="form-card glass-panel">
+          <div class="form-card-title">RED DE RELACIONES</div>
+          <template x-if="newContact.relaciones && newContact.relaciones.length > 0">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+              <template x-for="(rel, idx) in newContact.relaciones" :key="idx">
+                <div style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-color); padding: 10px 14px; border-radius: 16px; border: 1px solid var(--surface-border);">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: var(--fs-micro); font-weight: var(--fw-bold); background: var(--card-bg); padding: 4px 8px; border-radius: 99px; border: 1px solid var(--surface-border);" x-text="rel.tipo"></span>
+                    <span style="font-size: var(--fs-small); font-weight: var(--fw-bold);" x-text="getContactName(rel.contactoId)"></span>
+                  </div>
+                  <button type="button" @click="removeRelacion(idx)" style="background: none; border: none; color: var(--c-danger); cursor: pointer; padding: 4px;"><i data-lucide="trash-2" style="width: 16px; height: 16px; color: var(--c-danger);"></i></button>
+                </div>
+              </template>
             </div>
-            <div class="input-group" style="margin-top: 16px;">
-              <label>ATENCIÓN (RECORDATORIOS)</label>
-              <select x-model="newContact.frecuencia_deseada" style="padding-left: 18px;">
-                <option value="7">SEMANAL (7 DÍAS)</option>
-                <option value="15">QUINCENAL (15 DÍAS)</option>
-                <option value="30">MENSUAL (30 DÍAS)</option>
-                <option value="90">TRIMESTRAL (3 MESES)</option>
-                <option value="180">SEMESTRAL (6 MESES)</option>
-                <option value="365">ANUAL (1 AÑO)</option>
-                <option value="0">SIN RECORDATORIOS</option>
-              </select>
-            </div>
-            <div class="input-group" style="margin-top: 16px;"><label>¿CÓMO NOS CONOCIMOS?</label><input type="text" x-model="newContact.como_nos_conocimos" autocapitalize="sentences" placeholder="EJ: EN LA UNIVERSIDAD..." style="padding-left: 18px;"></div>
-          </div>
-
-          <div class="form-card glass-panel">
-            <div class="form-card-title">CONTEXTO & DETALLES</div>
+          </template>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
             <div class="input-row">
-              <div class="input-group"><label>CUMPLEAÑOS</label><input type="date" x-model="newContact.cumpleanos" style="padding-left: 18px;"></div>
-              <div class="input-group"><label>GÉNERO</label><select x-model="newContact.genero" style="padding-left: 18px;"><option value="">-</option><option value="Hombre">HOMBRE</option><option value="Mujer">MUJER</option></select></div>
+              <div class="input-group" style="flex: 1;"><label>RELACIÓN</label><select x-model="tempRelTipo" style="padding-left: 14px;"><option>PAREJA</option><option>FAMILIAR</option><option>AMIGO/A</option><option>OTRO</option></select></div>
+              <div class="input-group" style="flex: 1.5;"><label>PERSONA</label><select x-model="tempRelContactoId" style="padding-left: 14px;"><option value="">Seleccionar...</option><template x-for="c in availableContactsForRel" :key="c.id"><option :value="c.id" x-text="formatName(c.nombre, c.apellido)"></option></template></select></div>
             </div>
-            <div class="input-group" style="margin-top: 16px;"><label>TRABAJO / PROFESIÓN</label><input type="text" x-model="newContact.trabajo" autocapitalize="words" placeholder="EJ: DISEÑADOR..." style="padding-left: 18px;"></div>
-            <div class="input-group" style="margin-top: 16px;"><label>PREFERENCIAS / COMIDA</label><input type="text" x-model="newContact.comida_pref" placeholder="EJ: VEGETARIANO..." autocapitalize="sentences" style="padding-left: 18px;"></div>
-            <div class="input-row" style="margin-top: 16px;">
-              <div class="input-group"><label>PAREJA</label><input type="text" x-model="newContact.pareja_info" autocapitalize="words" style="padding-left: 18px;"></div>
-              <div class="input-group"><label>MASCOTAS</label><input type="text" x-model="newContact.mascotas" autocapitalize="words" style="padding-left: 18px;"></div>
-            </div>
-            <div class="input-group" style="margin-top: 16px;"><label>FAMILIA</label><input type="text" x-model="newContact.familia_info" placeholder="HIJOS, PADRES..." autocapitalize="sentences" style="padding-left: 18px;"></div>
-            <div class="input-group" style="margin-top: 16px;"><label>NOTAS GENERALES</label><textarea x-model="newContact.notas" rows="4" autocapitalize="sentences" placeholder="CUALQUIER OTRO DETALLE..."></textarea></div>
+            <button type="button" class="btn-secondary" style="padding: 12px; margin-top: 4px;" @click="addRelacion()"><i data-lucide="plus" style="width: 16px; height: 16px;"></i><span>VINCULAR CONTACTO</span></button>
           </div>
         </div>
-        
-        <button type="submit" class="btn-main" :disabled="isSavingContact" style="margin-top: 10px;">
-          <i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: white;"></i>
-          <span x-text="isSavingContact ? 'GUARDANDO...' : (editingContactId ? 'ACTUALIZAR' : 'GUARDAR CONTACTO')"></span>
-        </button>
+        <div class="form-card glass-panel">
+          <div class="form-card-title">CÍRCULO Y ATENCIÓN</div>
+          <div class="input-group"><label>CÍRCULO SOCIAL</label><select x-model="newContact.circulo" style="padding-left: 18px;"><option>AMIGOS</option><option>FAMILIA</option><option>TRABAJO</option><option>CONOCIDOS</option></select></div>
+          <div class="input-group" style="margin-top: 16px;"><label>RECORDATORIOS</label><select x-model="newContact.frecuencia_deseada" style="padding-left: 18px;"><option value="15">QUINCENAL</option><option value="30">MENSUAL</option><option value="90">TRIMESTRAL</option><option value="0">SIN RECORDATORIOS</option></select></div>
+        </div>
+        <button type="submit" class="btn-main" :disabled="isSavingContact" style="margin-top: 10px;"><i data-lucide="check" style="width: 18px; height: 18px; stroke-width: 2.5; color: var(--bg-color);"></i><span x-text="isSavingContact ? 'GUARDANDO...' : (editingContactId ? 'ACTUALIZAR' : 'GUARDAR CONTACTO')"></span></button>
       </form>
     </div>
   </div>
 
+  <!-- PERFIL DETALLADO DEL CONTACTO Y BÓVEDA (Arreglada) -->
   <div class="modal-overlay" x-show="modals.detalle" x-cloak x-transition.opacity @click="closeDetailModal"></div>
   <div class="bottom-sheet" id="detailSheet" x-show="modals.detalle" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full">
     <div class="sheet-handle"></div>
@@ -1205,126 +1107,75 @@
 
         <div class="detail-card-group">
           <div class="detail-row" style="border: none;">
-            <div class="detail-label">
-              <i data-lucide="clock" style="width: 14px; height: 14px;"></i>
-              <span>ÚLTIMA INTERACCIÓN</span>
-            </div>
+            <div class="detail-label"><i data-lucide="clock" style="width: 14px; height: 14px;"></i><span>ÚLTIMA INTERACCIÓN</span></div>
             <div class="detail-val" x-text="selectedContact._lastInteractionText || 'AÚN NO HAY REGISTROS'"></div>
           </div>
         </div>
 
-        <template x-if="selectedContact.cumpleanos || selectedContact.genero || selectedContact.como_nos_conocimos">
+        <!-- RELACIONES Y VÍNCULOS CHIPS NAVEGABLES -->
+        <template x-if="selectedContact.relaciones && selectedContact.relaciones.length > 0">
           <div class="detail-card-group">
-            <div class="detail-group-title">INFORMACIÓN PERSONAL</div>
-            <template x-if="selectedContact.cumpleanos">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="cake" style="width: 14px; height: 14px;"></i>
-                  <span>CUMPLEAÑOS</span>
+            <div class="detail-group-title">RED DE RELACIONES</div>
+            <div class="rel-chips-container">
+              <template x-for="(rel, idx) in selectedContact.relaciones" :key="idx">
+                <div class="rel-chip" @click="openDetail(parseInt(rel.contactoId))">
+                  <div class="rel-chip-avatar" :class="getColorHash(getContactRawName(rel.contactoId))">
+                    <span x-text="getInitialsFromId(rel.contactoId)"></span>
+                  </div>
+                  <div class="rel-chip-info">
+                    <span class="rel-chip-type" x-text="rel.tipo"></span>
+                    <span class="rel-chip-name" x-text="getContactName(rel.contactoId)"></span>
+                  </div>
+                  <i data-lucide="arrow-up-right" style="width:16px;height:16px;margin-left:auto;"></i>
                 </div>
-                <div class="detail-val" x-text="formatDateFriendly(selectedContact.cumpleanos)"></div>
-              </div>
-            </template>
-            <template x-if="selectedContact.genero">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="user" style="width: 14px; height: 14px;"></i>
-                  <span>GÉNERO</span>
-                </div>
-                <div class="detail-val" x-text="selectedContact.genero"></div>
-              </div>
-            </template>
-            <template x-if="selectedContact.como_nos_conocimos">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="compass" style="width: 14px; height: 14px;"></i>
-                  <span>NOS CONOCIMOS</span>
-                </div>
-                <div class="detail-val" x-text="selectedContact.como_nos_conocimos"></div>
-              </div>
-            </template>
-          </div>
-        </template>
-
-        <template x-if="selectedContact.pareja_info || selectedContact.familia_info || selectedContact.mascotas">
-          <div class="detail-card-group">
-            <div class="detail-group-title">CÍRCULO CERCANO</div>
-            <template x-if="selectedContact.pareja_info">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="heart" style="width: 14px; height: 14px;"></i>
-                  <span>PAREJA</span>
-                </div>
-                <div class="detail-val" x-text="selectedContact.pareja_info"></div>
-              </div>
-            </template>
-            <template x-if="selectedContact.familia_info">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="users-round" style="width: 14px; height: 14px;"></i>
-                  <span>FAMILIA</span>
-                </div>
-                <div class="detail-val" x-text="selectedContact.familia_info"></div>
-              </div>
-            </template>
-            <template x-if="selectedContact.mascotas">
-              <div class="detail-row">
-                <div class="detail-label">
-                  <i data-lucide="dog" style="width: 14px; height: 14px;"></i>
-                  <span>MASCOTAS</span>
-                </div>
-                <div class="detail-val" x-text="selectedContact.mascotas"></div>
-              </div>
-            </template>
-          </div>
-        </template>
-
-        <template x-if="selectedContact.comida_pref">
-          <div class="detail-card-group">
-            <div class="detail-group-title">PREFERENCIAS</div>
-            <div class="detail-row">
-              <div class="detail-label">
-                <i data-lucide="utensils" style="width: 14px; height: 14px;"></i>
-                <span>COMIDA / RESTRICCIONES</span>
-              </div>
-              <div class="detail-val" x-text="selectedContact.comida_pref"></div>
+              </template>
             </div>
           </div>
         </template>
-        
-        <template x-if="selectedContact.notas">
-          <div class="detail-card-group">
-            <div class="detail-group-title">CONTEXTO & NOTAS</div>
-            <div class="detail-row" style="border: none;"><div class="detail-val" style="white-space: pre-line;" x-text="selectedContact.notas"></div></div>
-          </div>
-        </template>
-        
-        <button class="detail-primary-action" @click="openQuickLogMenu(selectedContact.id)">
-          <i data-lucide="message-circle-plus" style="width:18px;height:18px;color:#fff;"></i>
-          Registrar una interacción
-        </button>
-        <div class="detail-status-copy" x-text="selectedContact._health && selectedContact._health.class !== 'hidden' ? healthExplanation(selectedContact) : 'No hay una frecuencia definida para este contacto.'"></div>
 
-        <div class="detail-actions-grid">
-          <button class="btn-detail-action" @click="editContact(selectedContact)">
-            <i data-lucide="pencil" style="width: 15px; height: 15px; color: var(--text-main);"></i>
-            <span>EDITAR</span>
-          </button>
-          <button class="btn-detail-action" @click="quickLogFullEditor(selectedContact.id)">
-            <i data-lucide="notebook-pen" style="width: 15px; height: 15px; color: var(--text-main);"></i>
-            <span>REGISTRAR</span>
-          </button>
+        <!-- HISTORIAL / LÍNEA DE TIEMPO DE INTERACCIONES -->
+        <div class="detail-card-group">
+          <div class="detail-group-title">HISTORIAL DE INTERACCIONES</div>
+          <template x-if="getContactNotes(selectedContact.id).length === 0">
+            <div style="font-size: var(--fs-small); color: var(--text-muted); font-weight: var(--fw-medium); padding: 6px 0;">Aún no hay recuerdos registrados.</div>
+          </template>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+            <template x-for="n in getContactNotes(selectedContact.id)" :key="n.id">
+              <div style="background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 18px; padding: 14px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-size: var(--fs-micro); font-weight: var(--fw-extrabold); text-transform: uppercase; color: var(--text-muted);" x-text="n.tipo === 'conversacion' ? 'CONVERSACIÓN' : 'ACTIVIDAD'"></span>
+                  <span style="font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-semibold);" x-text="formatDateFriendly(n.fecha)"></span>
+                </div>
+                <div style="font-size: var(--fs-base); font-weight: var(--fw-medium); color: var(--text-main); margin-bottom: 4px;" x-text="n.detalle"></div>
+              </div>
+            </template>
+          </div>
         </div>
 
-        <button class="btn-detail-danger" @click="promptDelete(selectedContact.id, selectedContact.nombre)">
-          <i data-lucide="trash-2" style="width: 14px; height: 14px; color: var(--c-danger);"></i>
-          <span>ELIMINAR CONTACTO</span>
-        </button>
+        <!-- BÓVEDA PERSONAL -->
+        <div class="detail-card-group glass-panel">
+          <div class="detail-group-title">BÓVEDA PERSONAL</div>
+          <p class="muted-copy">Detalles que querés recordar, ideas para sorprender y temas para retomar.</p>
+          <div class="vault-field"><label>Gustos y detalles</label><textarea rows="3" x-model="vaultDraft.gustos" placeholder="Café preferido, banda favorita…"></textarea></div>
+          <div class="vault-field"><label>Ideas de regalos</label><textarea rows="3" x-model="vaultDraft.regalos" placeholder="Algo que mencionó que le gustaría…"></textarea></div>
+          <div class="vault-field"><label>Para la próxima charla</label><textarea rows="3" x-model="vaultDraft.pendientes" placeholder="Preguntarle cómo le fue en el examen…"></textarea></div>
+          <button class="vault-save" style="width:100%" @click="saveVault()">Guardar Bóveda</button>
+        </div>
 
+        <button class="detail-primary-action" @click="openQuickLogMenu(selectedContact.id)">
+          <i data-lucide="message-circle-plus" style="width:18px;height:18px;color:var(--bg-color);"></i> Registrar interacción
+        </button>
+        
+        <div class="detail-actions-grid">
+          <button class="btn-detail-action" @click="editContact(selectedContact)"><i data-lucide="pencil" style="width: 15px; height: 15px;"></i><span>EDITAR</span></button>
+          <button class="btn-detail-action" @click="quickLogFullEditor(selectedContact.id)"><i data-lucide="notebook-pen" style="width: 15px; height: 15px;"></i><span>DETALLAR</span></button>
+        </div>
+        <button class="btn-detail-danger" @click="promptDelete(selectedContact.id, selectedContact.nombre)"><i data-lucide="trash-2" style="width: 14px; height: 14px; color: var(--c-danger);"></i><span>ELIMINAR CONTACTO</span></button>
       </div>
     </template>
   </div>
 
+  <!-- MODAL BORRAR CONTACTO -->
   <div class="modal-overlay" x-show="modals.confirmDelete" x-cloak x-transition.opacity></div>
   <div class="bottom-sheet" x-show="modals.confirmDelete" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500; padding-bottom: max(40px, env(safe-area-inset-bottom));">
     <div style="text-align: center; padding: 20px 0 30px;">
@@ -1339,63 +1190,94 @@
 
 </div>
 
+<!-- LOCK SCREEN CON WEBAUTHN / BIOMETRÍA -->
+<div class="lock-screen" x-show="lockEnabled && !unlocked" x-cloak>
+  <div class="lock-inner">
+    <div style="font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:#999">AGENDA PRIVADA</div>
+    <h2>souvlaki</h2>
+    <p>Verificá tu identidad con el método de seguridad del dispositivo para continuar.</p>
+    <button @click="unlockWithPasskey()">Continuar con biometría / passkey</button>
+    <button class="secondary" @click="registerPasskey()">Registrar passkey en este dispositivo</button>
+    <button class="secondary" @click="lockEnabled=false; unlocked=true; localStorage.setItem('souvlaki_lock_enabled','false')">Desactivar bloqueo de interfaz</button>
+    <p style="margin-top:14px" x-text="lockMessage"></p>
+  </div>
+</div>
 <div id="toast" class="toast" :class="{ 'show': toast.show }"><span x-text="toast.msg"></span></div>
 
 <script>
+  if (navigator.storage && navigator.storage.persist) { 
+    navigator.storage.persist().then(granted => { if(granted) console.log("Persist: OK"); }); 
+  }
+
+  // Helper WebAuthn (Base64URL Conversions)
+  function bufferToBase64url(buffer) {
+    const byteView = new Uint8Array(buffer);
+    let str = "";
+    for (const charCode of byteView) { str += String.fromCharCode(charCode); }
+    return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  }
+
+  function base64urlToBuffer(base64url) {
+    const padding = "==".slice(0, (4 - base64url.length % 4) % 4);
+    const base64 = (base64url + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const str = atob(base64);
+    const buffer = new ArrayBuffer(str.length);
+    const byteView = new Uint8Array(buffer);
+    for (let i = 0; i < str.length; i++) { byteView[i] = str.charCodeAt(i); }
+    return buffer;
+  }
+
   const db = new Dexie('SouvlakiDB');
-  db.version(6).stores({ contacts: '++id, nombre, apellido, circulo', notes: '++id, contactoId, fecha, tipo, timestamp' });
+  db.version(7).stores({ 
+    contacts: '++id, nombre, apellido, circulo', 
+    notes: '++id, contactoId, fecha, tipo, timestamp, *contactosIds' 
+  });
   
   document.addEventListener('alpine:init', () => {
     Alpine.data('appData', () => ({
-      currentView: 'home', isLoading: true, headerOpacity: 1, headerScrolled: false, headerScrollProgress: 0, headerHeightReduction: 0, headerBgAlpha: 0, headerBlur: 0, headerShadowAlpha: 0, headerTranslate: 0, navScrollHidden: false, lastScrollY: 0, scrollRaf: null, swipeHintDismissed: localStorage.getItem('souvlaki_swipe_hint') === '1',
+      currentView: 'home', isLoading: true, headerOpacity: 1, headerScrolled: false,
+      vaultDraft: { gustos: '', regalos: '', pendientes: '' }, 
+      lockEnabled: localStorage.getItem('souvlaki_lock_enabled') === 'true', 
+      unlocked: localStorage.getItem('souvlaki_lock_enabled') !== 'true', 
+      lockMessage: '', 
+      graphInstance: null, chartInstances: {},
       modals: { nuevo: false, detalle: false, about: false, confirmDelete: false, sortFilter: false, quickLog: false },
       toast: { show: false, msg: '' }, preventNextClick: false, contactToDelete: null, keyboardOpen: false,
 
+      userTheme: localStorage.getItem('souvlaki_theme') || 'system',
       contacts: [], notes: [], searchQuery: '', filterCircle: 'Todos', noteFilter: 'Todos',
       sortMode: 'alfabetico', activeCard: null, selectedContact: null, stocardExpanded: false,
       activeQuickLogContact: null, showAdvancedContactFields: false,
       
-      editingContactId: null,
-      editingNoteId: null,
-
-      quickLogStep: 1,
-      quickLogText: '',
-      quickLogType: 'conversacion',
-      quickLogNote: '',
-
-      isSavingContact: false, isSavingNote: false,
-      newContact: { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '' },
-      newNote: { tipo: 'conversacion', contactoId: '', fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' },
+      editingContactId: null, editingNoteId: null, quickLogStep: 1, quickLogText: '', quickLogType: 'conversacion', quickLogNote: '', quickLogContactosIds: [],
+      tempRelTipo: 'PAREJA', tempRelContactoId: '', isSavingContact: false, isSavingNote: false,
+      newContact: { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '', relaciones: [] },
+      newNote: { tipo: 'conversacion', contactoId: '', contactosIds: [], fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' },
 
       async initApp() {
-        try {
-          await db.open();
-          if (navigator.storage && navigator.storage.persist) {
-            await navigator.storage.persist();
-          }
-        } catch (e) {
-          console.error('IndexedDB no disponible', e);
-        }
+        this.setTheme(this.userTheme);
         await this.loadData();
         const inputs = document.querySelectorAll('input, textarea, select');
         inputs.forEach(el => { el.addEventListener('focus', () => this.keyboardOpen = true); el.addEventListener('blur', () => this.keyboardOpen = false); });
 
-        this.$watch('currentView', () => this.renderIcons());
+        this.$watch('currentView', (v) => { this.renderIcons(); });
         this.$watch('modals', () => this.renderIcons());
         this.$watch('quickLogStep', () => this.renderIcons());
         this.$watch('showAdvancedContactFields', () => this.renderIcons());
         this.renderIcons();
       },
 
-      renderIcons() {
-        this.$nextTick(() => {
-          if (window.lucide) {
-            lucide.createIcons();
-          }
-        });
+      setTheme(theme) {
+        this.userTheme = theme;
+        localStorage.setItem('souvlaki_theme', theme);
+        document.body.classList.remove('dark-theme', 'light-theme');
+        if (theme === 'dark') document.body.classList.add('dark-theme');
+        else if (theme === 'light') document.body.classList.add('light-theme');
       },
 
-      get isNavHidden() { return this.navScrollHidden || this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
+      renderIcons() { this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
+
+      get isNavHidden() { return this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
 
       async loadData() {
         this.isLoading = true;
@@ -1405,31 +1287,38 @@
           this.notes = dbNotes.sort((a, b) => (b.timestamp || b.id) - (a.timestamp || a.id));
           this.computeContactStats(rawContacts);
           this.renderIcons();
-        } catch (e) { console.error("ERROR LOCAL", e); } finally { this.isLoading = false; }
+        } catch (e) { console.error("Error al cargar base local", e); } finally { this.isLoading = false; }
       },
 
       computeContactStats(rawContacts) {
         this.contacts = rawContacts.map(c => {
-             const cNotes = this.notes.filter(n => parseInt(n.contactoId) === parseInt(c.id));
-             let lastTs = null; let lastText = "Sin registros";
-             if (cNotes.length > 0) {
-                 lastTs = cNotes[0].timestamp || new Date(cNotes[0].fecha + 'T12:00:00').getTime();
-                 const days = Math.floor((Date.now() - lastTs) / (1000 * 60 * 60 * 24));
-                 if (days === 0) lastText = "HOY"; else if (days === 1) lastText = "AYER"; else lastText = `HACE ${days} DÍAS`;
-             }
-             let health = { text: '', class: 'hidden' };
-             let score = -1;
-             if (c.frecuencia_deseada && c.frecuencia_deseada > 0) {
-                 if (!lastTs) { score = 999; } 
-                 else {
-                     const daysSince = (Date.now() - lastTs) / (1000 * 60 * 60 * 24);
-                     score = daysSince / c.frecuencia_deseada;
-                 }
-                 if (score < 0.75) health = { text: 'AL DÍA', class: 'status-good' };
-                 else if (score <= 1.2) health = { text: 'PRONTO', class: 'status-warn' };
-                 else health = { text: 'SALUDAR', class: 'status-cold' };
-             }
-             return { ...c, _lastInteractionTs: lastTs, _lastInteractionText: lastText, _attentionScore: score, _health: health };
+          const cId = parseInt(c.id);
+          const cNotes = this.notes.filter(n => {
+            const pId = parseInt(n.contactoId);
+            const multi = Array.isArray(n.contactosIds) ? n.contactosIds.map(Number) : [];
+            return pId === cId || multi.includes(cId);
+          });
+
+          let lastTs = null; let lastText = "Sin registros";
+          if (cNotes.length > 0) {
+            lastTs = cNotes[0].timestamp || new Date(cNotes[0].fecha + 'T12:00:00').getTime();
+            const days = Math.floor((Date.now() - lastTs) / (1000 * 60 * 60 * 24));
+            if (days === 0) lastText = "HOY"; else if (days === 1) lastText = "AYER"; else lastText = `HACE ${days} DÍAS`;
+          }
+
+          let health = { text: '', class: 'hidden' };
+          let score = -1;
+          if (c.frecuencia_deseada && c.frecuencia_deseada > 0) {
+            if (!lastTs) { score = 999; } 
+            else {
+              const daysSince = (Date.now() - lastTs) / (1000 * 60 * 60 * 24);
+              score = daysSince / c.frecuencia_deseada;
+            }
+            if (score < 0.75) health = { text: 'AL DÍA', class: 'status-good' };
+            else if (score <= 1.2) health = { text: 'PRONTO', class: 'status-warn' };
+            else health = { text: 'SALUDAR', class: 'status-cold' };
+          }
+          return { ...c, relaciones: Array.isArray(c.relaciones) ? c.relaciones : [], _lastInteractionTs: lastTs, _lastInteractionText: lastText, _attentionScore: score, _health: health };
         });
       },
 
@@ -1445,25 +1334,14 @@
         if (this.sortMode === 'alfabetico') { list.sort((a, b) => a.nombre.localeCompare(b.nombre)); } 
         else if (this.sortMode === 'reciente') { list.sort((a, b) => (b._lastInteractionTs || 0) - (a._lastInteractionTs || 0)); } 
         else if (this.sortMode === 'atencion') { list.sort((a, b) => b._attentionScore - a._attentionScore); }
-        
         return list;
       },
 
       get primaryContacts() { const all = this.sortedAndFilteredContacts; return all.length <= 5 ? all : all.slice(0, 5); },
       get secondaryContacts() { const all = this.sortedAndFilteredContacts; return all.length <= 5 ? [] : all.slice(5); },
-      get attentionContacts() {
-        return [...this.contacts]
-          .filter(c => c._health && c._health.class === 'status-cold')
-          .sort((a,b) => (b._attentionScore || 0) - (a._attentionScore || 0))
-          .slice(0, 3);
-      },
       get hasActiveFilters() { return !!this.searchQuery.trim() || this.filterCircle !== 'Todos' || this.sortMode !== 'alfabetico'; },
-      get contactResultLabel() {
-        const total = this.sortedAndFilteredContacts.length;
-        if (this.searchQuery.trim()) return total === 1 ? '1 resultado' : `${total} resultados`;
-        return total === 1 ? '1 contacto' : `${total} contactos`;
-      },
       get contactsListAlphabetic() { return [...this.contacts].sort((a,b)=>a.nombre.localeCompare(b.nombre)); },
+      get availableContactsForRel() { return this.contacts.filter(c => c.id !== this.editingContactId).sort((a,b) => a.nombre.localeCompare(b.nombre)); },
 
       get upcomingBirthdays() {
         const today = new Date(); today.setHours(0,0,0,0);
@@ -1484,10 +1362,9 @@
 
       get groupedNotes() {
         let filtered = this.noteFilter === 'Todos' ? this.notes : this.notes.filter(n => {
-               const c = this.contacts.find(x => x.id === parseInt(n.contactoId));
-               return c && (c.circulo || 'GENERAL').toUpperCase() === this.noteFilter.toUpperCase();
-            });
-        
+           const c = this.contacts.find(x => x.id === parseInt(n.contactoId));
+           return c && (c.circulo || 'GENERAL').toUpperCase() === this.noteFilter.toUpperCase();
+        });
         const groups = {}; const today = new Date(); today.setHours(0,0,0,0);
         filtered.slice(0, 60).forEach(n => {
            let nDate = new Date(n.fecha + 'T12:00:00'); nDate.setHours(0,0,0,0);
@@ -1498,80 +1375,182 @@
            if(!groups[groupName]) groups[groupName] = [];
            groups[groupName].push(n);
         });
-        
         const orderedGroups = {};
         ["HOY", "AYER", "ESTA SEMANA", "ESTE MES", "ANTERIORES"].forEach(k => { if(groups[k]) orderedGroups[k] = groups[k]; });
         return orderedGroups;
       },
 
+      getContactNotes(contactId) {
+        if (!contactId) return [];
+        const cId = parseInt(contactId);
+        return this.notes.filter(n => {
+          const pId = parseInt(n.contactoId);
+          const multi = Array.isArray(n.contactosIds) ? n.contactosIds.map(Number) : [];
+          return pId === cId || multi.includes(cId);
+        }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      },
+
+      saveVault() {
+        if (!this.selectedContact) return;
+        const original = this.contacts.find(c => c.id === this.selectedContact.id);
+        if (!original) return;
+        
+        const updated = { 
+            ...original, 
+            vault: { 
+                gustos: this.vaultDraft.gustos.trim(), 
+                regalos: this.vaultDraft.regalos.trim(), 
+                pendientes: this.vaultDraft.pendientes.trim(), 
+                updatedAt: Date.now() 
+            } 
+        };
+        
+        db.contacts.put(updated).then(() => {
+          this.selectedContact = updated;
+          this.showToast('BÓVEDA ACTUALIZADA');
+          return this.loadData();
+        }).catch(() => this.showToast('NO SE PUDO GUARDAR'));
+      },
+
+      graphEdgesCount() { return this.contacts.reduce((sum,c) => sum + (Array.isArray(c.relaciones) ? c.relaciones.filter(r => this.contacts.some(x => x.id === Number(r.contactoId))).length : 0), 0) / 2; },
+
+      renderSocialGraph() {
+        const host = document.getElementById('socialGraph');
+        if (!host || !window.vis || !window.vis.Network) return;
+        const colors = ['#8E8CF0','#E9A0AC','#77BDA5','#E5B56D','#7FA9E8','#B89AD8'];
+        const circles = [...new Set(this.contacts.map(c => c.circulo || 'GENERAL'))];
+        const nodes = this.contacts.map(c => ({ id:Number(c.id), label:this.formatName(c.nombre,c.apellido) || 'Sin nombre', group:c.circulo || 'GENERAL', color:{background:colors[Math.max(0,circles.indexOf(c.circulo || 'GENERAL'))%colors.length],border:'rgba(255,255,255,.65)'}, font:{color:document.body.classList.contains('dark-theme')?'#fff':'#222',size:13,face:'Plus Jakarta Sans'}, shape:'dot', size:17, title:(c.circulo || 'GENERAL') }));
+        const seen = new Set(), edges = [];
+        this.contacts.forEach(c => (c.relaciones || []).forEach(r => {
+          const other = Number(r.contactoId), a = Number(c.id), key = [Math.min(a,other),Math.max(a,other)].join('-');
+          if (a !== other && this.contacts.some(x => Number(x.id) === other) && !seen.has(key)) { seen.add(key); edges.push({from:a,to:other,label:r.tipo || '',font:{size:9,align:'middle'}}); }
+        }));
+        if (this.graphInstance) this.graphInstance.destroy();
+        this.graphInstance = new vis.Network(host,{nodes:new vis.DataSet(nodes),edges:new vis.DataSet(edges)},{autoResize:true,physics:{stabilization:{iterations:100},barnesHut:{gravitationalConstant:-2200,springLength:130}},interaction:{hover:true,zoomView:true},nodes:{borderWidth:1},edges:{color:{color:'rgba(130,130,145,.55)',highlight:'#8E8CF0'},smooth:{type:'dynamic'}}});
+        this.graphInstance.on('click', params => { if(params.nodes && params.nodes.length) { const id=Number(params.nodes[0]); this.openDetail(id); }});
+        setTimeout(() => { if(this.graphInstance) this.graphInstance.fit(); }, 50);
+      },
+
+      monthNotes() { const now = new Date(); return this.notes.filter(n => { const d = new Date((n.fecha || '') + 'T12:00:00'); return d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth(); }); },
+      inPersonCount() { return this.monthNotes().filter(n => /presencial|encuentro|salida|nos vimos|cara a cara/i.test((n.detalle || '') + ' ' + (n.nota || ''))).length; },
+
+      renderBalanceCharts() {
+        if (!window.Chart) return;
+        const month = this.monthNotes();
+        const circleCounts = {};
+        month.forEach(n => {
+          const ids = Array.isArray(n.contactosIds) && n.contactosIds.length ? n.contactosIds : [n.contactoId];
+          const circles = [...new Set(ids.map(id => this.contacts.find(c => Number(c.id)===Number(id))?.circulo || 'GENERAL'))];
+          circles.forEach(c => circleCounts[c] = (circleCounts[c] || 0) + 1);
+        });
+        const modeCounts = {'Conversaciones':0,'Actividades':0,'Presenciales*':0};
+        month.forEach(n => { if(n.tipo === 'actividad') modeCounts['Actividades']++; else modeCounts['Conversaciones']++; if(/presencial|encuentro|salida|nos vimos|cara a cara/i.test((n.detalle||'')+' '+(n.nota||''))) modeCounts['Presenciales*']++; });
+        const create = (id,type,labels,data) => {
+          const canvas = document.getElementById(id); if(!canvas) return;
+          if(this.chartInstances[id]) this.chartInstances[id].destroy();
+          this.chartInstances[id] = new Chart(canvas,{type,data:{labels,datasets:[{data,backgroundColor:['#8E8CF0','#E9A0AC','#77BDA5','#E5B56D','#7FA9E8','#B89AD8'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:getComputedStyle(document.body).getPropertyValue('--text-muted'),usePointStyle:true,padding:16}}}}});
+        };
+        create('circleChart','doughnut',Object.keys(circleCounts),Object.values(circleCounts));
+        create('interactionChart','bar',Object.keys(modeCounts),Object.values(modeCounts));
+      },
+
+      async unlockWithPasskey() {
+        if (!window.PublicKeyCredential || !navigator.credentials || !window.isSecureContext) {
+          this.lockMessage = 'Este navegador no permite passkeys en este contexto. Abrí la app desde HTTPS.';
+          return;
+        }
+        const credentialId = localStorage.getItem('souvlaki_passkey_id');
+        if (!credentialId) {
+          this.lockMessage = 'Todavía no hay una passkey registrada. Activá la protección desde Ajustes.';
+          return;
+        }
+        try {
+          const rawIdBuffer = base64urlToBuffer(credentialId);
+          const challenge = crypto.getRandomValues(new Uint8Array(32));
+          const assertion = await navigator.credentials.get({
+              publicKey: {
+                  challenge,
+                  allowCredentials: [{ type: 'public-key', id: rawIdBuffer }],
+                  userVerification: 'required',
+                  timeout: 60000
+              }
+          });
+          if (assertion) { this.unlocked = true; this.lockMessage = ''; }
+        } catch(e) { this.lockMessage = 'No se pudo verificar la passkey. Intentá nuevamente.'; }
+      },
+
+      async registerPasskey() {
+        if (!window.PublicKeyCredential || !navigator.credentials || !window.isSecureContext) {
+          this.lockMessage = 'Se necesita HTTPS (o localhost) y un navegador compatible con passkeys.';
+          this.showToast('PASSKEY NO DISPONIBLE');
+          return;
+        }
+        try {
+          const challenge = crypto.getRandomValues(new Uint8Array(32));
+          const userId = crypto.getRandomValues(new Uint8Array(16));
+          const credential = await navigator.credentials.create({
+              publicKey: {
+                  challenge, 
+                  rp: { name: 'Souvlaki Agenda' },
+                  user: { id: userId, name: 'usuario@souvlaki.local', displayName: 'Usuario de Souvlaki' },
+                  pubKeyCredParams: [{ type: 'public-key', alg: -7 }, { type: 'public-key', alg: -257 }],
+                  authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required', residentKey: 'preferred' },
+                  timeout: 60000, 
+                  attestation: 'none'
+              }
+          });
+          if (!credential) throw new Error('No se creó la credencial');
+          
+          const idBase64URL = bufferToBase64url(credential.rawId);
+          localStorage.setItem('souvlaki_passkey_id', idBase64URL);
+          localStorage.setItem('souvlaki_lock_enabled','true');
+          
+          this.lockEnabled = true; this.unlocked = true; this.lockMessage = '';
+          this.showToast('PASSKEY REGISTRADA EN ESTE DISPOSITIVO');
+        } catch(e) {
+          console.error(e);
+          this.lockMessage = 'No se pudo registrar. Comprobá la compatibilidad y el permiso biométrico del dispositivo.';
+        }
+      },
+
       healthExplanation(contact) {
         if (!contact || !contact._health || contact._health.class === 'hidden') return '';
         if (!contact._lastInteractionTs) return 'Todavía no hay una interacción registrada.';
-        if (contact._health.class === 'status-good') return 'El vínculo está dentro de la frecuencia que elegiste.';
-        if (contact._health.class === 'status-warn') return 'Se acerca el momento que elegiste para volver a hablar.';
-        return 'Hace más tiempo del deseado que no registrás una interacción.';
+        if (contact._health.class === 'status-good') return 'El vínculo está dentro de la frecuencia elegida.';
+        if (contact._health.class === 'status-warn') return 'Se acerca el momento para volver a hablar.';
+        return 'Hace más tiempo del deseado que no registrás contacto.';
       },
 
-      attentionReason(contact) {
-        if (!contact) return '';
-        if (!contact._lastInteractionTs) return 'Todavía no hay una interacción registrada';
-        return contact._lastInteractionText === 'HOY' ? 'Hablaron hoy' : `Último contacto: ${contact._lastInteractionText.toLowerCase()}`;
-      },
-
-      dismissSwipeHint() {
-        this.swipeHintDismissed = true;
-        localStorage.setItem('souvlaki_swipe_hint', '1');
-      },
-
-      handleScroll() {
-        if (this.scrollRaf) return;
-        this.scrollRaf = requestAnimationFrame(() => {
-          const scrollY = Math.max(0, window.scrollY || 0);
-          const delta = scrollY - this.lastScrollY;
-
-          // El encabezado cambia de forma progresiva en vez de saltar entre dos estados.
-          this.headerScrollProgress = Math.min(scrollY / 120, 1);
-          this.headerHeightReduction = 38 * this.headerScrollProgress;
-          this.headerBgAlpha = .78 * this.headerScrollProgress;
-          this.headerBlur = 18 * this.headerScrollProgress;
-          this.headerShadowAlpha = .06 * this.headerScrollProgress;
-          this.headerTranslate = -5 * this.headerScrollProgress;
-          this.headerScrolled = this.headerScrollProgress > .68;
-
-          // La navegación se aparta solo cuando realmente estás bajando; reaparece al subir.
-          if (delta > 10 && scrollY > 180) this.navScrollHidden = true;
-          else if (delta < -8 || scrollY < 40) this.navScrollHidden = false;
-
-          this.lastScrollY = scrollY;
-          this.scrollRaf = null;
-        });
-      },
+      handleScroll() { this.headerScrolled = window.scrollY > 45; this.headerOpacity = 1; },
 
       openNewContactModal() {
         this.editingContactId = null;
-        this.newContact = { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '' };
-        this.showAdvancedContactFields = false;
-        this.modals.nuevo = true;
+        this.newContact = { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '', relaciones: [] };
+        this.tempRelTipo = 'PAREJA'; this.tempRelContactoId = ''; this.showAdvancedContactFields = false; this.modals.nuevo = true;
       },
 
       editContact(c) {
-        this.closeDetailModal();
-        this.editingContactId = c.id;
-        this.newContact = { ...c };
-        this.showAdvancedContactFields = true;
-        this.modals.nuevo = true;
+        this.closeDetailModal(); this.editingContactId = c.id; this.newContact = JSON.parse(JSON.stringify(c));
+        if (!Array.isArray(this.newContact.relaciones)) this.newContact.relaciones = [];
+        this.tempRelTipo = 'PAREJA'; this.tempRelContactoId = ''; this.showAdvancedContactFields = true; this.modals.nuevo = true;
       },
+
+      addRelacion() {
+        if (!this.tempRelContactoId) { this.showToast("SELECCIONÁ UN CONTACTO"); return; }
+        if (!Array.isArray(this.newContact.relaciones)) this.newContact.relaciones = [];
+        const relId = parseInt(this.tempRelContactoId);
+        if (this.newContact.relaciones.some(r => parseInt(r.contactoId) === relId)) { this.showToast("ESTE CONTACTO YA ESTÁ VINCULADO"); return; }
+        this.newContact.relaciones.push({ contactoId: relId, tipo: this.tempRelTipo || 'OTRO' });
+        this.tempRelContactoId = ''; this.renderIcons();
+      },
+
+      removeRelacion(index) { if (Array.isArray(this.newContact.relaciones)) { this.newContact.relaciones.splice(index, 1); } },
 
       async saveContact() {
         this.isSavingContact = true;
         try {
-          let cToSave = { 
-            ...this.newContact, 
-            frecuencia_deseada: parseInt(this.newContact.frecuencia_deseada || 0)
-          };
-
+          let cToSave = { ...this.newContact, frecuencia_deseada: parseInt(this.newContact.frecuencia_deseada || 0), relaciones: Array.isArray(this.newContact.relaciones) ? this.newContact.relaciones : [] };
           cToSave = JSON.parse(JSON.stringify(cToSave));
-
           if (this.editingContactId) {
             cToSave.id = this.editingContactId;
             await db.contacts.put(cToSave);
@@ -1581,48 +1560,40 @@
             await db.contacts.add(cToSave);
             this.showToast("CONTACTO CREADO");
           }
-
-          this.closeNewContactModal();
-          await this.loadData();
-        } catch (e) { 
-          console.error(e);
-          this.showToast("ERROR AL GUARDAR"); 
-        } finally { 
-          this.isSavingContact = false; 
-        }
+          this.closeNewContactModal(); await this.loadData();
+        } catch (e) { this.showToast("ERROR AL GUARDAR"); } finally { this.isSavingContact = false; }
       },
 
-      closeNewContactModal() {
-        this.modals.nuevo = false;
-        setTimeout(() => { 
-          this.showAdvancedContactFields = false; 
-          this.editingContactId = null;
-        }, 400); 
-      },
+      closeNewContactModal() { this.modals.nuevo = false; setTimeout(() => { this.showAdvancedContactFields = false; this.editingContactId = null; }, 400); },
 
       editNote(note) {
         this.editingNoteId = note.id;
-        this.newNote = { ...note, contactoId: String(note.contactoId) };
-        this.currentView = 'log';
-        window.scrollTo(0, 0);
+        const cIds = Array.isArray(note.contactosIds) && note.contactosIds.length > 0 ? note.contactosIds.map(Number) : [parseInt(note.contactoId)];
+        this.newNote = { ...note, contactosIds: cIds, contactoId: String(cIds[0]) };
+        this.currentView = 'log'; window.scrollTo(0, 0);
       },
 
-      resetNoteForm() {
-        this.editingNoteId = null;
-        this.newNote = { tipo: 'conversacion', contactoId: '', fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' };
+      resetNoteForm() { this.editingNoteId = null; this.newNote = { tipo: 'conversacion', contactoId: '', contactosIds: [], fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' }; },
+      addContactToNote(cId) {
+        if (!cId) return; const idNum = parseInt(cId);
+        if (!Array.isArray(this.newNote.contactosIds)) this.newNote.contactosIds = [];
+        if (!this.newNote.contactosIds.includes(idNum)) { this.newNote.contactosIds.push(idNum); }
+        this.newNote.contactoId = String(this.newNote.contactosIds[0] || '');
+      },
+      toggleNoteContact(cId) {
+        const idNum = parseInt(cId); if (!Array.isArray(this.newNote.contactosIds)) return;
+        this.newNote.contactosIds = this.newNote.contactosIds.filter(x => x !== idNum);
+        this.newNote.contactoId = String(this.newNote.contactosIds[0] || '');
       },
 
       async saveNote() {
+        if (!this.newNote.contactosIds || this.newNote.contactosIds.length === 0) {
+          if (this.newNote.contactoId) { this.newNote.contactosIds = [parseInt(this.newNote.contactoId)]; } else { this.showToast("SELECCIONÁ AL MENOS UN CONTACTO"); return; }
+        }
         this.isSavingNote = true;
         try {
-          let noteToSave = { 
-            ...this.newNote, 
-            contactoId: parseInt(this.newNote.contactoId), 
-            timestamp: this.editingNoteId ? (this.newNote.timestamp || Date.now()) : Date.now() 
-          };
-
+          let noteToSave = { ...this.newNote, contactoId: parseInt(this.newNote.contactosIds[0]), contactosIds: this.newNote.contactosIds.map(Number), timestamp: this.editingNoteId ? (this.newNote.timestamp || Date.now()) : Date.now() };
           noteToSave = JSON.parse(JSON.stringify(noteToSave));
-
           if (this.editingNoteId) {
             noteToSave.id = this.editingNoteId;
             await db.notes.put(noteToSave);
@@ -1632,85 +1603,61 @@
             await db.notes.add(noteToSave);
             this.showToast("REGISTRO GUARDADO");
           }
-
-          this.resetNoteForm();
-          await this.loadData();
-        } catch (e) { 
-          console.error(e);
-          this.showToast("ERROR AL GUARDAR"); 
-        } finally { 
-          this.isSavingNote = false; 
-        }
+          this.resetNoteForm(); await this.loadData();
+        } catch (e) { this.showToast("ERROR AL GUARDAR"); } finally { this.isSavingNote = false; }
       },
 
-      promptDelete(id, nombre) {
-        this.closeDetailModal(); this.contactToDelete = { id, nombre };
-        setTimeout(() => { this.modals.confirmDelete = true; }, 150);
-      },
-
+      promptDelete(id, nombre) { this.closeDetailModal(); this.contactToDelete = { id, nombre }; setTimeout(() => { this.modals.confirmDelete = true; }, 150); },
       async confirmDelete() {
         if (!this.contactToDelete) return;
         try {
           const idToDelete = this.contactToDelete.id;
           await db.contacts.delete(idToDelete);
           await db.notes.where('contactoId').equals(idToDelete).delete();
-          
           this.modals.confirmDelete = false; this.showToast("CONTACTO ELIMINADO");
           this.contactToDelete = null; await this.loadData();
         } catch(e) {}
       },
 
-      quickLogFullEditor(contactId) {
-        this.closeQuickLogModal();
-        this.closeDetailModal(); this.currentView = 'log';
-        this.resetNoteForm();
-        this.newNote.contactoId = String(contactId);
-        window.scrollTo(0, 0);
-      },
-
-      openQuickLogMenu(contactId) {
-        this.activeQuickLogContact = this.contacts.find(c => c.id === contactId);
-        this.quickLogStep = 1;
-        this.quickLogNote = '';
-        this.modals.quickLog = true;
-      },
-
-      closeQuickLogModal() {
-        this.modals.quickLog = false;
-        setTimeout(() => {
-          this.quickLogStep = 1;
-          this.quickLogNote = '';
-        }, 300);
-      },
-
-      selectQuickOption(text, type) {
-        this.quickLogText = text;
-        this.quickLogType = type;
-        this.quickLogStep = 2;
-      },
-
+      quickLogFullEditor(contactId) { this.closeQuickLogModal(); this.closeDetailModal(); this.currentView = 'log'; this.resetNoteForm(); this.newNote.contactosIds = [parseInt(contactId)]; this.newNote.contactoId = String(contactId); window.scrollTo(0, 0); },
+      openQuickLogMenu(contactId) { this.activeQuickLogContact = this.contacts.find(c => c.id === contactId); this.quickLogStep = 1; this.quickLogNote = ''; this.quickLogContactosIds = [parseInt(contactId)]; this.modals.quickLog = true; },
+      toggleQuickLogContact(cId) { const idNum = parseInt(cId); if (this.quickLogContactosIds.includes(idNum)) { this.quickLogContactosIds = this.quickLogContactosIds.filter(x => x !== idNum); } else { this.quickLogContactosIds.push(idNum); } },
+      closeQuickLogModal() { this.modals.quickLog = false; setTimeout(() => { this.quickLogStep = 1; this.quickLogNote = ''; this.quickLogContactosIds = []; }, 300); },
+      selectQuickOption(text, type) { this.quickLogText = text; this.quickLogType = type; this.quickLogStep = 2; },
       async confirmQuickLog() {
         try {
-            let noteToSave = { 
-              tipo: this.quickLogType, 
-              contactoId: parseInt(this.activeQuickLogContact.id), 
-              fecha: new Date().toISOString().split('T')[0], 
-              detalle: this.quickLogText, 
-              nota: this.quickLogNote || '', 
-              timestamp: Date.now(), 
-              id: Date.now() 
-            };
-            
+            const allIds = this.quickLogContactosIds.length > 0 ? this.quickLogContactosIds : [parseInt(this.activeQuickLogContact.id)];
+            let noteToSave = { tipo: this.quickLogType, contactoId: allIds[0], contactosIds: allIds, fecha: new Date().toISOString().split('T')[0], detalle: this.quickLogText, nota: this.quickLogNote || '', timestamp: Date.now(), id: Date.now() };
             noteToSave = JSON.parse(JSON.stringify(noteToSave));
-
             await db.notes.add(noteToSave);
             this.showToast("INTERACCIÓN REGISTRADA");
-            this.closeQuickLogModal();
-            await this.loadData();
-        } catch (e) { 
-          console.error(e);
-          this.showToast("ERROR AL GUARDAR"); 
-        }
+            this.closeQuickLogModal(); await this.loadData();
+        } catch (e) { this.showToast("ERROR AL GUARDAR"); }
+      },
+
+      async exportData() {
+        try {
+          const contactsData = await db.contacts.toArray(); const notesData = await db.notes.toArray();
+          const backup = { app: 'Souvlaki Agenda Humana', version: 6, exportedAt: new Date().toISOString(), contacts: contactsData, notes: notesData };
+          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = `souvlaki_backup_${new Date().toISOString().split('T')[0]}.json`;
+          a.click(); URL.revokeObjectURL(url); this.showToast("RESPALDO EXPORTADO");
+        } catch (e) { this.showToast("ERROR AL EXPORTAR"); }
+      },
+      async importData(event) {
+        const file = event.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          try {
+            const data = JSON.parse(e.target.result);
+            if (!data.contacts || !data.notes) throw new Error("Formato inválido");
+            await db.contacts.clear(); await db.notes.clear();
+            await db.contacts.bulkAdd(data.contacts); await db.notes.bulkAdd(data.notes);
+            this.showToast("DATOS RESTAURADOS CON ÉXITO"); await this.loadData();
+          } catch (err) { this.showToast("ARCHIVO JSON INVÁLIDO"); }
+        };
+        reader.readAsText(file);
       },
 
       showToast(msg) { this.toast.msg = msg; this.toast.show = true; setTimeout(() => this.toast.show = false, 2800); },
@@ -1726,73 +1673,42 @@
       },
       getColorHash(str) {
         const themes = ['theme-titanium', 'theme-aurora', 'theme-obsidian', 'theme-sunrise', 'theme-emerald', 'theme-violet'];
-        let hash = 0; for (let i = 0; i < str.length; i++) hash = (hash * 31) + str.charCodeAt(i);
+        let hash = 0; for (let i = 0; i < (str||'').length; i++) hash = (hash * 31) + str.charCodeAt(i);
         return themes[Math.abs(hash) % themes.length];
       },
 
       openDetail(contactId) {
-        if (this.activeCard === contactId || this.preventNextClick) return;
+        if (this.preventNextClick) return;
         if ('vibrate' in navigator) navigator.vibrate(10);
-        this.activeCard = contactId; this.selectedContact = this.contacts.find(c => c.id === contactId);
+        this.activeCard = contactId; 
+        this.selectedContact = this.contacts.find(c => c.id === contactId);
+        this.vaultDraft = { gustos: this.selectedContact?.vault?.gustos || '', regalos: this.selectedContact?.vault?.regalos || '', pendientes: this.selectedContact?.vault?.pendientes || '' };
         const sheet = document.getElementById('detailSheet'); if(sheet) sheet.scrollTop = 0;
-        setTimeout(() => { 
-          this.modals.detalle = true; 
-          this.renderIcons();
-        }, 100);
+        this.modals.detalle = true; this.renderIcons();
       },
 
       closeDetailModal() { this.modals.detalle = false; this.activeCard = null; },
 
       initSwipe(el, contact) {
         let startX = 0, startY = 0, isSwiping = false, isScrolling = false, isPointerDown = false;
-        
         const cardTarget = el.querySelector('.wallet-card');
         const bgLog = el.querySelector('.swipe-bg-log');
         const bgDel = el.querySelector('.swipe-bg-delete');
 
-        const getPos = e => {
-           if (e.touches && e.touches.length > 0) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
-           return { clientX: e.clientX, clientY: e.clientY };
-        };
-
-        const onStart = e => {
-          isPointerDown = true;
-          const pos = getPos(e);
-          startX = pos.clientX;
-          startY = pos.clientY;
-          isSwiping = false; 
-          isScrolling = false; 
-          if (cardTarget) cardTarget.style.transition = 'none';
-          if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId);
-        };
-
+        const getPos = e => { if (e.touches && e.touches.length > 0) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }; return { clientX: e.clientX, clientY: e.clientY }; };
+        const onStart = e => { isPointerDown = true; const pos = getPos(e); startX = pos.clientX; startY = pos.clientY; isSwiping = false; isScrolling = false; if (cardTarget) cardTarget.style.transition = 'none'; if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId); };
         const onMove = e => {
           if (!isPointerDown || this.activeCard || isScrolling) return;
-          
-          const pos = getPos(e);
-          const diffX = pos.clientX - startX; 
-          const diffY = pos.clientY - startY;
-          
+          const pos = getPos(e); const diffX = pos.clientX - startX; const diffY = pos.clientY - startY;
           if (!isSwiping) {
               if (Math.abs(diffY) > Math.abs(diffX) + 5) { isScrolling = true; return; }
-              if (Math.abs(diffX) > 10) { 
-                  isSwiping = true; 
-                  if(e.cancelable) e.preventDefault();
-              }
+              if (Math.abs(diffX) > 10) { isSwiping = true; if(e.cancelable) e.preventDefault(); }
           }
           if (isSwiping) {
             if(e.cancelable) e.preventDefault();
             let move = diffX;
             requestAnimationFrame(() => {
-              if(move > 0) {
-                 move = Math.min(move, 100);
-                 if(bgLog) bgLog.style.opacity = Math.min(move / 70, 1);
-                 if(bgDel) bgDel.style.opacity = '0';
-              } else {
-                 move = Math.max(move, -100);
-                 if(bgDel) bgDel.style.opacity = Math.min(Math.abs(move) / 70, 1);
-                 if(bgLog) bgLog.style.opacity = '0';
-              }
+              if(move > 0) { move = Math.min(move, 100); if(bgLog) bgLog.style.opacity = Math.min(move / 70, 1); if(bgDel) bgDel.style.opacity = '0'; } else { move = Math.max(move, -100); if(bgDel) bgDel.style.opacity = Math.min(Math.abs(move) / 70, 1); if(bgLog) bgLog.style.opacity = '0'; }
               if (cardTarget) cardTarget.style.transform = `translate3d(${move}px, 0, 0)`;
             });
           }
@@ -1802,44 +1718,17 @@
            if (cardTarget) cardTarget.style.transition = 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)';
            if (bgLog) bgLog.style.transition = 'opacity 0.3s ease';
            if (bgDel) bgDel.style.transition = 'opacity 0.3s ease';
-           requestAnimationFrame(() => { 
-               if (cardTarget) cardTarget.style.transform = 'translate3d(0,0,0)'; 
-               if(bgLog) bgLog.style.opacity = '0'; 
-               if(bgDel) bgDel.style.opacity = '0'; 
-           });
+           requestAnimationFrame(() => { if (cardTarget) cardTarget.style.transform = 'translate3d(0,0,0)'; if(bgLog) bgLog.style.opacity = '0'; if(bgDel) bgDel.style.opacity = '0'; });
         };
 
         const onEnd = e => {
-          if (!isPointerDown) return;
-          isPointerDown = false;
-          
+          if (!isPointerDown) return; isPointerDown = false;
           let diffX = 0, diffY = 0;
-          if(e.type.includes('pointer') || e.type.includes('mouse')) { 
-             diffX = e.clientX - startX; 
-             diffY = e.clientY - startY;
-          }
-          else if(e.changedTouches && e.changedTouches.length > 0) { 
-             diffX = e.changedTouches[0].clientX - startX; 
-             diffY = e.changedTouches[0].clientY - startY;
-          }
+          if(e.type.includes('pointer') || e.type.includes('mouse')) { diffX = e.clientX - startX; diffY = e.clientY - startY; } else if(e.changedTouches && e.changedTouches.length > 0) { diffX = e.changedTouches[0].clientX - startX; diffY = e.changedTouches[0].clientY - startY; }
+          if (!isSwiping) { resetPosition(); if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5 && !isScrolling) { this.openDetail(contact.id); } return; }
           
-          if (!isSwiping) { 
-            resetPosition(); 
-            if (Math.abs(diffX) < 5 && Math.abs(diffY) < 5 && !isScrolling) {
-                this.openDetail(contact.id);
-            }
-            return; 
-          }
-          
-          if (diffX > 75) { 
-             if ('vibrate' in navigator) navigator.vibrate(15); 
-             this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300);
-             this.openQuickLogMenu(contact.id);
-          } else if (diffX < -75) { 
-             if ('vibrate' in navigator) navigator.vibrate([15, 40, 15]); 
-             this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300);
-             this.promptDelete(contact.id, contact.nombre);
-          }
+          if (diffX > 75) { if ('vibrate' in navigator) navigator.vibrate(15); this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300); this.openQuickLogMenu(contact.id); } 
+          else if (diffX < -75) { if ('vibrate' in navigator) navigator.vibrate([15, 40, 15]); this.preventNextClick = true; setTimeout(() => this.preventNextClick = false, 300); this.promptDelete(contact.id, contact.nombre); }
           resetPosition();
         };
 
