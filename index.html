@@ -376,7 +376,7 @@
     .note-group-title::after { content: ''; flex: 1; height: 1px; background: var(--surface-border); }
     .log-feed { display: flex; flex-direction: column; gap: 16px; }
     .log-card { padding: 24px; border-radius: 28px; position: relative; padding-left: 20px; border-left: 3px solid var(--text-muted); }
-    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-right: 60px; /* Evitar superponer botones */ } 
     .log-user { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
     .log-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: var(--fs-small); font-weight: var(--fw-bold); color: var(--text-main); border: 1px solid var(--surface-border);}
     
@@ -390,10 +390,10 @@
     .log-meta { background: var(--bg-color); border-radius: 16px; padding: 14px 16px; margin-top: 16px; font-size: var(--fs-small); color: var(--text-main); font-weight: var(--fw-medium); border: 1px solid var(--surface-border); }
     .log-meta-tag { font-size: var(--fs-micro); text-transform: uppercase; color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 4px; display: block; letter-spacing: var(--ls-wide);}
     
-    .btn-edit-log { position: absolute; right: 20px; bottom: 20px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 6px; border-radius: 10px; transition: background 0.2s, color 0.2s; }
+    .btn-edit-log { display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 10px; transition: background 0.2s, color 0.2s; }
     .btn-edit-log:hover { color: var(--text-main); background: var(--bg-color); }
 
-    /* Navegación Inferior Arreglada (Stack Vertical) */
+    /* Navegación Inferior (Stack Vertical) */
     .bottom-nav { position: fixed; bottom: 30px; left: 0; right: 0; margin: 0 auto; background: var(--nav-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 8px 6px; border-radius: 99px; display: flex; gap: 2px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid var(--surface-border); z-index: 100; width: min(420px, calc(100% - 24px)); justify-content: space-between; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s; }
     .bottom-nav.nav-hidden { transform: translateY(150%); opacity: 0; pointer-events: none; }
     .nav-item { flex: 1; color: var(--text-muted); background: none; border: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; cursor: pointer; font-family: inherit; transition: all .2s; padding: 8px 0; border-radius: 20px; }
@@ -416,7 +416,7 @@
     .input-row > * { flex: 1; }
     label { font-size: var(--fs-micro); font-weight: var(--fw-bold); color: var(--text-muted); text-transform: uppercase; letter-spacing: var(--ls-wide); margin-left: 6px; }
     
-    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+    input, select, textarea { background: var(--input-bg); border: 1px solid var(--surface-border); border-radius: 20px; padding: 18px; font-size: var(--fs-base); font-family: var(--font-main); font-weight: var(--fw-medium); color: var(--text-main); width: 100%; outline: none; transition: border-color 0.2s, background 0.2s; -webkit-appearance: none; box-shadow: 0 2px 10px rgba(0,0,0,0.02); resize: none !important; }
     input:focus, select:focus, textarea:focus { border-color: var(--text-muted); background: var(--card-bg); }
     select option { color: var(--text-main); background: var(--card-bg); }
     
@@ -480,7 +480,7 @@
     /* Componentes Compartidos Adicionales */
     .app-footer { text-align: center; padding: 20px 0 80px; }
     
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: var(--bg-color); padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--text-main); color: var(--bg-color); padding: 16px 28px; border-radius: 99px; font-family: var(--font-main); font-weight: var(--fw-bold); font-size: var(--fs-small); text-transform: uppercase; letter-spacing: var(--ls-wide); display: flex; align-items: center; justify-content: center; z-index: 3000; box-shadow: 0 10px 30px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
     .toast.show { transform: translateX(-50%) translateY(0); }
 
     .fs-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 600; display: flex; flex-direction: column; overflow: hidden; }
@@ -555,7 +555,7 @@
     
     .lock-screen { position: fixed; inset: 0; z-index: 2000; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; padding: 28px; }
     .lock-inner { width: 100%; max-width: 360px; text-align: center; }
-    .lock-inner h2 { font-size: 30px; margin: 18px 0 8px; }
+    .lock-inner h2 { font-size: 30px; margin: 18px 0 8px; font-weight: var(--fw-extrabold); letter-spacing: var(--ls-tight);}
     .lock-inner p { color: #aaa; font-size: 13px; line-height: 1.6; margin-bottom: 22px; }
     .lock-inner button { width: 100%; border: 1px solid #333; border-radius: 99px; padding: 15px; background: #fff; color: #000; font-weight: 800; font-family: inherit; margin-top: 10px; cursor: pointer;}
     .lock-inner button.secondary { background: #111; color: #fff; }
@@ -577,7 +577,9 @@
 
 <body x-data="appData" @scroll.window="handleScroll" x-init="initApp">
 
-<div class="app-container" x-cloak>
+<!-- Contenedor general que DESAPARECE por completo cuando está bloqueado -->
+<div class="app-container" x-show="unlocked" x-cloak>
+  
   <div class="ambient-orbs" aria-hidden="true"><div class="ambient-orb one"></div><div class="ambient-orb two"></div><div class="ambient-orb three"></div></div>
   
   <header :class="{ 'header-compact': headerScrolled }" :style="{ opacity: 1, pointerEvents: 'auto' }">
@@ -673,7 +675,6 @@
                 <span>ELIMINAR</span>
               </div>
               
-              <!-- Color dinámico de la tarjeta restaurado -->
               <div class="wallet-card" :class="getColorHash(contact.nombre || String(contact.id))">
                 <div class="card-header">
                   <div class="card-title">
@@ -855,7 +856,17 @@
             <div style="display:flex; flex-direction:column; gap:20px;">
               <template x-for="n in notesArray" :key="n.id">
                 <div class="log-card glass-panel">
-                  <button class="btn-edit-log" @click="editNote(n)"><i data-lucide="pencil" style="width: 16px; height: 16px;"></i></button>
+                  
+                  <!-- Contenedor flex para botones Editar y Eliminar Registro -->
+                  <div style="position: absolute; right: 16px; top: 16px; display: flex; gap: 4px;">
+                    <button class="btn-edit-log" aria-label="Editar" @click="editNote(n)">
+                      <i data-lucide="pencil" style="width: 16px; height: 16px;"></i>
+                    </button>
+                    <button class="btn-edit-log" aria-label="Borrar" @click="deleteNotePrompt(n.id)">
+                      <i data-lucide="trash-2" style="width: 16px; height: 16px; color: var(--c-danger);"></i>
+                    </button>
+                  </div>
+
                   <div class="log-header">
                     <div class="log-user">
                       <template x-for="cId in (n.contactosIds && n.contactosIds.length > 0 ? n.contactosIds : [n.contactoId])" :key="'usr-'+cId">
@@ -903,7 +914,7 @@
     </main>
   </div>
 
-  <!-- NAVEGACIÓN INFERIOR (Arreglada para que no se superpongan) -->
+  <!-- NAVEGACIÓN INFERIOR -->
   <nav class="bottom-nav" :class="{ 'nav-hidden': isNavHidden }">
     <button class="nav-item" :class="{ 'active': currentView === 'home' }" @click="currentView = 'home'; window.scrollTo(0,0);">
       <i data-lucide="users" style="width: 18px; height: 18px;"></i><span class="nav-label">AGENDA</span>
@@ -924,7 +935,7 @@
     <i data-lucide="plus" style="width:21px;height:21px;color:var(--text-main);"></i>
   </button>
 
-  <!-- MODALES DE FILTRO Y QUICKLOG (Mantenidos ocultos para acortar si es necesario, pero intactos) -->
+  <!-- MODALES DE FILTRO Y QUICKLOG -->
   <div class="modal-overlay" x-show="modals.sortFilter" x-cloak x-transition.opacity @click="modals.sortFilter = false"></div>
   <div class="bottom-sheet" x-show="modals.sortFilter" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full" style="z-index: 500;">
     <div class="sheet-handle"></div>
@@ -1008,9 +1019,10 @@
       
       <div class="insight-card glass-panel" style="text-align:left;margin-top:20px">
         <h3 style="font-size: var(--fs-base); font-weight: var(--fw-bold);">Privacidad y bloqueo</h3>
-        <p>Souvlaki ahora admite WebAuthn para bloquear la interfaz usando la huella o FaceID de este dispositivo.</p>
+        <p>Souvlaki admite WebAuthn para bloquear la interfaz usando la huella o FaceID del dispositivo.</p>
         <button class="vault-save" style="width:100%" @click="registerPasskey()">Configurar biometría</button>
-        <button class="vault-save" style="width:100%;background:var(--bg-color);color:var(--text-main);border:1px solid var(--surface-border)" @click="lockEnabled = !lockEnabled; unlocked = !lockEnabled; localStorage.setItem('souvlaki_lock_enabled', String(lockEnabled)); lockMessage = ''" x-text="lockEnabled ? 'Desactivar bloqueo' : 'Activar bloqueo'"></button>
+        <!-- Desactivar bloqueo solo puede hacerse desde acá adentro, maximizando seguridad -->
+        <button class="vault-save" style="width:100%;background:var(--bg-color);color:var(--text-main);border:1px solid var(--surface-border)" @click="lockEnabled = false; unlocked = true; localStorage.setItem('souvlaki_lock_enabled', 'false'); lockMessage = ''" x-show="lockEnabled">Desactivar bloqueo de seguridad</button>
       </div>
 
       <div class="feature-card glass-panel" style="border: 1px solid var(--text-muted); text-align: left;">
@@ -1085,7 +1097,7 @@
     </div>
   </div>
 
-  <!-- PERFIL DETALLADO DEL CONTACTO Y BÓVEDA (Arreglada) -->
+  <!-- PERFIL DETALLADO DEL CONTACTO Y BÓVEDA -->
   <div class="modal-overlay" x-show="modals.detalle" x-cloak x-transition.opacity @click="closeDetailModal"></div>
   <div class="bottom-sheet" id="detailSheet" x-show="modals.detalle" x-cloak x-transition:enter="transition ease-out duration-300" x-transition:enter-start="transform translate-y-full" x-transition:enter-end="transform translate-y-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="transform translate-y-0" x-transition:leave-end="transform translate-y-full">
     <div class="sheet-handle"></div>
@@ -1141,8 +1153,14 @@
           </template>
           <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
             <template x-for="n in getContactNotes(selectedContact.id)" :key="n.id">
-              <div style="background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 18px; padding: 14px 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="background: var(--card-bg); border: 1px solid var(--surface-border); border-radius: 18px; padding: 14px 16px; position: relative;">
+                
+                <!-- Botón borrar para la tarjeta del contacto -->
+                <button class="btn-edit-log" style="position: absolute; right: 10px; top: 10px;" @click="deleteNotePrompt(n.id)">
+                  <i data-lucide="trash-2" style="width: 14px; height: 14px; color: var(--c-danger);"></i>
+                </button>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding-right: 30px;">
                   <span style="font-size: var(--fs-micro); font-weight: var(--fw-extrabold); text-transform: uppercase; color: var(--text-muted);" x-text="n.tipo === 'conversacion' ? 'CONVERSACIÓN' : 'ACTIVIDAD'"></span>
                   <span style="font-size: var(--fs-micro); color: var(--text-muted); font-weight: var(--fw-semibold);" x-text="formatDateFriendly(n.fecha)"></span>
                 </div>
@@ -1188,7 +1206,7 @@
     </div>
   </div>
 
-</div>
+</div> <!-- FIN DEL CONTENEDOR APP (Que se oculta al bloquear) -->
 
 <!-- LOCK SCREEN CON WEBAUTHN / BIOMETRÍA -->
 <div class="lock-screen" x-show="lockEnabled && !unlocked" x-cloak>
@@ -1198,10 +1216,11 @@
     <p>Verificá tu identidad con el método de seguridad del dispositivo para continuar.</p>
     <button @click="unlockWithPasskey()">Continuar con biometría / passkey</button>
     <button class="secondary" @click="registerPasskey()">Registrar passkey en este dispositivo</button>
-    <button class="secondary" @click="lockEnabled=false; unlocked=true; localStorage.setItem('souvlaki_lock_enabled','false')">Desactivar bloqueo de interfaz</button>
+    <!-- Se eliminó el botón de "Desactivar bloqueo" para forzar seguridad estricta -->
     <p style="margin-top:14px" x-text="lockMessage"></p>
   </div>
 </div>
+
 <div id="toast" class="toast" :class="{ 'show': toast.show }"><span x-text="toast.msg"></span></div>
 
 <script>
@@ -1254,6 +1273,10 @@
       newContact: { nombre: '', apellido: '', apodo: '', circulo: 'AMIGOS', frecuencia_deseada: 30, genero: '', cumpleanos: '', trabajo: '', como_nos_conocimos: '', comida_pref: '', pareja_info: '', mascotas: '', familia_info: '', notas: '', relaciones: [] },
       newNote: { tipo: 'conversacion', contactoId: '', contactosIds: [], fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' },
 
+      get isModalOpen() {
+        return this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog;
+      },
+
       async initApp() {
         this.setTheme(this.userTheme);
         await this.loadData();
@@ -1264,6 +1287,12 @@
         this.$watch('modals', () => this.renderIcons());
         this.$watch('quickLogStep', () => this.renderIcons());
         this.$watch('showAdvancedContactFields', () => this.renderIcons());
+        
+        // Bloquear el scroll de fondo al abrir cualquier Modal o Tarjeta
+        this.$watch('isModalOpen', (v) => {
+          document.body.style.overflow = v ? 'hidden' : '';
+        });
+
         this.renderIcons();
       },
 
@@ -1277,7 +1306,7 @@
 
       renderIcons() { this.$nextTick(() => { if (window.lucide) lucide.createIcons(); }); },
 
-      get isNavHidden() { return this.keyboardOpen || this.modals.nuevo || this.modals.detalle || this.modals.about || this.modals.confirmDelete || this.modals.sortFilter || this.modals.quickLog; },
+      get isNavHidden() { return this.keyboardOpen || this.isModalOpen; },
 
       async loadData() {
         this.isLoading = true;
@@ -1572,6 +1601,15 @@
         this.newNote = { ...note, contactosIds: cIds, contactoId: String(cIds[0]) };
         this.currentView = 'log'; window.scrollTo(0, 0);
       },
+      
+      deleteNotePrompt(noteId) {
+        if(confirm('¿Estás seguro de que querés eliminar este registro de actividad?')) {
+            db.notes.delete(noteId).then(() => {
+                this.showToast("REGISTRO ELIMINADO");
+                this.loadData();
+            });
+        }
+      },
 
       resetNoteForm() { this.editingNoteId = null; this.newNote = { tipo: 'conversacion', contactoId: '', contactosIds: [], fecha: new Date().toISOString().split('T')[0], detalle: '', nota: '' }; },
       addContactToNote(cId) {
@@ -1696,13 +1734,26 @@
         const bgDel = el.querySelector('.swipe-bg-delete');
 
         const getPos = e => { if (e.touches && e.touches.length > 0) return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY }; return { clientX: e.clientX, clientY: e.clientY }; };
-        const onStart = e => { isPointerDown = true; const pos = getPos(e); startX = pos.clientX; startY = pos.clientY; isSwiping = false; isScrolling = false; if (cardTarget) cardTarget.style.transition = 'none'; if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId); };
+        
+        const onStart = e => { 
+            isPointerDown = true; 
+            const pos = getPos(e); 
+            startX = pos.clientX; 
+            startY = pos.clientY; 
+            isSwiping = false; 
+            isScrolling = false; 
+            if (cardTarget) cardTarget.style.transition = 'none'; 
+            if(e.type === 'pointerdown') el.setPointerCapture(e.pointerId); 
+        };
+        
         const onMove = e => {
           if (!isPointerDown || this.activeCard || isScrolling) return;
           const pos = getPos(e); const diffX = pos.clientX - startX; const diffY = pos.clientY - startY;
+          
           if (!isSwiping) {
-              if (Math.abs(diffY) > Math.abs(diffX) + 5) { isScrolling = true; return; }
-              if (Math.abs(diffX) > 10) { isSwiping = true; if(e.cancelable) e.preventDefault(); }
+              // Tolerancia mejorada para distinguir Scroll de Swipe
+              if (Math.abs(diffY) > Math.abs(diffX) + 8) { isScrolling = true; return; }
+              if (Math.abs(diffX) > 15) { isSwiping = true; if(e.cancelable) e.preventDefault(); }
           }
           if (isSwiping) {
             if(e.cancelable) e.preventDefault();
